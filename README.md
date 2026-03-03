@@ -1,4 +1,4 @@
-# A multiplayer wave defence game (Currently Closed)
+# A multiplayer wave defence game 
 
 STILL A WORK IN PROGRESS
 
