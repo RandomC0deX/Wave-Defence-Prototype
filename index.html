@@ -32,6 +32,7 @@
             z-index: 100;
             max-width: 300px;
             white-space: pre-wrap;
+            display: none;
         }
         #fps {
             position: fixed;
@@ -54,6 +55,50 @@
     <div id="stats">Connecting...</div>
     <div id="debug">Debug console</div>
     <div id="fps">FPS: 0</div>
+    <!-- Chat Container -->
+    <div id="chatContainer" style="
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        width: 300px;
+        height: 200px;
+        background: rgba(0,0,0,0.1);
+        border: 1px solid #444;
+        border-radius: 5px;
+        display: flex;
+        flex-direction: column;
+        z-index: 1000;
+    ">
+        <div id="chatMessages" style="
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 5px;
+            color: white;
+            font-family: monospace;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column-reverse;
+        "></div>
+        <div style="display: flex; border-top: 1px solid #444;">
+            <input type="text" id="chatInput" placeholder="Type message..." style="
+                flex-grow: 1;
+                background: rgba(255,255,255,0.1);
+                border: none;
+                color: white;
+                padding: 8px;
+                outline: none;
+                font-family: monospace;
+            ">
+            <button id="chatSend" style="
+                background: #4CAF50;
+                border: none;
+                color: white;
+                padding: 8px 15px;
+                cursor: pointer;
+                font-family: monospace;
+            ">Send</button>
+        </div>
+    </div>
     <canvas id="gameCanvas"></canvas>
 
     <script>
@@ -64,12 +109,14 @@
         canvas.height = window.innerHeight;
 
         // Game state
-        const ws = new WebSocket('wss://project-rts.onrender.com');
+        const ws = new WebSocket('ws://localhost:10000');
         let players = {};
         let gameState = { enemies: [], projectiles: [], walls: [] };
         let myId = null;
         let keys = {};
         let debugInfo = [];
+        let lastPlayerCount = 0;
+        let debugVisible = false;
 
         // MOVEMENT
         const SPEED = 4;
@@ -94,29 +141,102 @@
         const CAMERA_SMOOTH = 0.1;
         let lastTime = performance.now();
 
+        //World Boarders
+        const WORLD_WIDTH = 2000;
+        const WORLD_HEIGHT = 2000;
+        const VOID_COLOR = 'rgba(30, 30, 40, 0.95)';
+        const GRID_COLOR = '#2a2a3e';
+
+        //Chat Variables
+        let chatMessages = [];
+        const MAX_CHAT_MESSAGES = 50;
+
         // WebSocket handlers
         ws.onopen = () => {
             debug('✅ Connected');
             document.getElementById('stats').innerHTML = '✅ Connected';
             ws.send(JSON.stringify({type: 'hello'}));
+            
+            // Set up chat listeners
+            document.getElementById('chatSend').addEventListener('click', sendChatMessage);
+            document.getElementById('chatInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendChatMessage();
+            });
         };
 
         ws.onmessage = (event) => {
+             console.log('🔵 RAW MESSAGE RECEIVED:', event.data);
             try {
                 const data = JSON.parse(event.data);
+                const chatDiv = document.getElementById('chatMessages');
                 
+                // Player init
                 if (data.type === 'init') {
                     myId = data.id;
                     debug('✅ Got ID:', myId);
                     document.getElementById('stats').innerHTML = `Player ${myId}`;
                 }
                 
+                // Player updates
                 if (data.type === 'update') {
+                    const oldCount = Object.keys(players).length;
                     players = data.players || {};
+                    const newCount = Object.keys(players).length;
+                    
+                    // Remove yourself
                     if (myId && players[myId]) {
                         delete players[myId];
                     }
+                    
+                    const currentCount = Object.keys(players).length + (myId ? 1 : 0);
+                    
+                    // Player join/leave messages
+                    if (currentCount !== lastPlayerCount) {
+                        if (currentCount > lastPlayerCount) {
+                            debug(`➕ Player joined! Total: ${currentCount}`);
+                            const systemMsg = `🏷️ Player joined! Total: ${currentCount}`;
+                            chatMessages.unshift(`<span style="color: #4CAF50;">${systemMsg}</span>`);
+                        } else if (currentCount < lastPlayerCount) {
+                            debug(`➖ Player left. Total: ${currentCount}`);
+                            const systemMsg = `👋 Player left. Total: ${currentCount}`;
+                            chatMessages.unshift(`<span style="color: #ff4444;">${systemMsg}</span>`);
+                        }
+                        
+                        // Trim and update display
+                        if (chatMessages.length > MAX_CHAT_MESSAGES) chatMessages.pop();
+                        chatDiv.innerHTML = chatMessages.map(msg => 
+                            `<div style="margin: 2px 0;">${msg}</div>`
+                        ).join('');
+                        
+                        lastPlayerCount = currentCount;
+                    }
                 }
+                
+                // Chat messages
+                if (data.type === 'chat') {
+                    console.log('📨 Chat received from player', data.playerId, ':', data.message);
+                    
+                    // Format the message
+                    const message = `[P${data.playerId}]: ${data.message}`;
+                    chatMessages.unshift(message);
+                    
+                    // Keep under limit
+                    if (chatMessages.length > MAX_CHAT_MESSAGES) {
+                        chatMessages.pop();
+                    }
+                    
+                    // Force display update
+                    const chatDisplay = document.getElementById('chatMessages');
+                    if (chatDisplay) {
+                        chatDisplay.innerHTML = chatMessages.map(msg => 
+                            `<div style="color: white; margin: 2px 0;">${msg}</div>`
+                        ).join('');
+                        console.log('✅ Chat display updated');
+                    } else {
+                        console.log('❌ Chat div not found!');
+                    }
+                }
+                
             } catch (e) {
                 debug('❌ Error:', e.message);
             }
@@ -129,21 +249,76 @@
 
         // Keyboard
         document.addEventListener('keydown', (e) => {
+            if (document.activeElement === document.getElementById('chatInput')) {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault(); 
+                }
+                return;
+            }
+            
             keys[e.key] = true;
             if (['w','a','s','d','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
                 e.preventDefault();
             }
         });
-        
+
         document.addEventListener('keyup', (e) => {
+            if (document.activeElement === document.getElementById('chatInput')) return;
             keys[e.key] = false;
         });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '`' || e.key === '~') { // Covers both shifted and unshifted
+                e.preventDefault();
+                debugVisible = !debugVisible;
+                const debugEl = document.getElementById('debug');
+                if (debugEl) {
+                    debugEl.style.display = debugVisible ? 'block' : 'none';
+                    if (debugVisible) {
+                        debug('🔧 Debug mode ON');
+                    }
+                }
+            }
+        })
+
+        // Chat function
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            console.log('Send attempt:', {message, myId, wsState: ws?.readyState});
+            
+            if (!message) {
+                debug('❌ No message to send');
+                return;
+            }
+            
+            if (!myId) {
+                debug('❌ Not connected yet - wait for ID');
+                return;
+            }
+            
+            if (ws.readyState !== WebSocket.OPEN) {
+                debug('❌ WebSocket not open. State:', ws.readyState);
+                return;
+            }
+            
+            // If we get here, everything is good
+            const msg = JSON.stringify({
+                type: 'chat',
+                message: message
+            });
+            console.log('Sending:', msg);
+            ws.send(msg);
+            input.value = '';
+            debug('✅ Message sent');
+        }
 
         // GAME LOOP (combined movement + drawing)
         function gameLoop() {
             // Calculate delta time
             const now = performance.now();
-            const deltaTime = Math.min((now - lastTime) / 16.67, 2); // Normalize to 60fps, cap at 2
+            const deltaTime = Math.min((now - lastTime) / 16.67, 2);
             lastTime = now;
             
             // MOVEMENT
@@ -157,7 +332,7 @@
                 myX = Math.max(20, Math.min(2000, myX)); 
                 myY = Math.max(20, Math.min(2000, myY));
 
-                // Set camera target to player position
+                // Set camera target
                 targetCameraX = myX - canvas.width / 2;
                 targetCameraY = myY - canvas.height / 2;
 
@@ -173,18 +348,57 @@
             // SMOOTH CAMERA FOLLOW
             cameraX += (targetCameraX - cameraX) * CAMERA_SMOOTH * deltaTime;
             cameraY += (targetCameraY - cameraY) * CAMERA_SMOOTH * deltaTime;
+
+            // Visible area
+            const visibleLeft = cameraX;
+            const visibleTop = cameraY;
+            const visibleRight = cameraX + canvas.width;
+            const visibleBottom = cameraY + canvas.height;
             
             // DRAWING
-            // Clear canvas
             ctx.fillStyle = '#1a1a2e';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Apply camera transform
             ctx.save();
             ctx.translate(-cameraX, -cameraY);
+
+            // Draw World Borders (Void)
+            ctx.fillStyle = VOID_COLOR;
+
+            // Left void
+            if (visibleLeft < 0) {
+                ctx.fillRect(visibleLeft, visibleTop, -visibleLeft, visibleBottom - visibleTop);
+            }
+            // Right void
+            if (visibleRight > WORLD_WIDTH) {
+                ctx.fillRect(WORLD_WIDTH, visibleTop, visibleRight - WORLD_WIDTH, visibleBottom - visibleTop);
+            }
+            // Top void
+            if (visibleTop < 0) {
+                ctx.fillRect(Math.max(0, visibleLeft), visibleTop, 
+                            Math.min(WORLD_WIDTH, visibleRight) - Math.max(0, visibleLeft), -visibleTop);
+            }
+            // Bottom void
+            if (visibleBottom > WORLD_HEIGHT) {
+                ctx.fillRect(Math.max(0, visibleLeft), WORLD_HEIGHT, 
+                            Math.min(WORLD_WIDTH, visibleRight) - Math.max(0, visibleLeft), visibleBottom - WORLD_HEIGHT);
+            }
+            // Corner voids
+            if (visibleLeft < 0 && visibleTop < 0) {
+                ctx.fillRect(visibleLeft, visibleTop, -visibleLeft, -visibleTop);
+            }
+            if (visibleRight > WORLD_WIDTH && visibleTop < 0) {
+                ctx.fillRect(WORLD_WIDTH, visibleTop, visibleRight - WORLD_WIDTH, -visibleTop);
+            }
+            if (visibleLeft < 0 && visibleBottom > WORLD_HEIGHT) {
+                ctx.fillRect(visibleLeft, WORLD_HEIGHT, -visibleLeft, visibleBottom - WORLD_HEIGHT);
+            }
+            if (visibleRight > WORLD_WIDTH && visibleBottom > WORLD_HEIGHT) {
+                ctx.fillRect(WORLD_WIDTH, WORLD_HEIGHT, visibleRight - WORLD_WIDTH, visibleBottom - WORLD_HEIGHT);
+            }
             
             // Draw grid
-            ctx.strokeStyle = '#2a2a3e';
+            ctx.strokeStyle = GRID_COLOR;
             ctx.lineWidth = 1;
             const startX = Math.floor(cameraX / 50) * 50;
             const startY = Math.floor(cameraY / 50) * 50;
@@ -203,7 +417,7 @@
                 ctx.stroke();
             }
             
-            // Draw other players - ONLY if it's NOT me
+            // Draw other players
             for (let id in players) {
                 const p = players[id];
                 if (!p) continue;
@@ -239,13 +453,25 @@
             requestAnimationFrame(gameLoop);
         }
         
-        // Start the game loop
         gameLoop();
 
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         });
+
+        window.ws = ws;
+        window.myId = myId;
+        window.chatMessages = chatMessages;
+        window.players = players;
+        window.updateChatDisplay = function() {
+            const chatDiv = document.getElementById('chatMessages');
+            if (chatDiv) {
+                chatDiv.innerHTML = chatMessages.map(msg => 
+                    `<div style="color: #aaa; margin: 2px 0;">${msg}</div>`
+                ).join('');
+            }
+        };
     </script>
 </body>
 </html>
