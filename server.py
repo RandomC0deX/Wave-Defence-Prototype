@@ -12,7 +12,6 @@ clients = set()
 # Game world (empty for now)
 game_state = {
     "enemies": [],
-    "projectiles": [],
     "walls": []
 }
 
@@ -58,12 +57,21 @@ async def handle_client(websocket):
                 
                 await asyncio.gather(*(client.send(chat_message) for client in clients))
                 print(f"✅ Chat broadcast complete")
+            if data["type"] == "shoot":
+                print(f"🔫 Player {player_id} shot bullet {data['bullet']['id']}")
+                
+                # Broadcast bullet to all clients
+                bullet_msg = json.dumps({
+                    "type": "bullet",
+                    "playerId": player_id,
+                    "bullet": data["bullet"]
+                })
+                await asyncio.gather(*(client.send(bullet_msg) for client in clients))
             
             # Broadcast game state
             game_update = json.dumps({
                 "type": "update",
-                "players": players,
-                "game": game_state
+                "players": players
             })
             await asyncio.gather(*(client.send(game_update) for client in clients))
             
