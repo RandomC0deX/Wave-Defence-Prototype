@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WAVE DEFENCE PROTOTYPE</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #1a1a2e;
+            font-family: Arial, sans-serif;
+        }
+        #stats {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            color: white;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 100;
+        }
+        #debug {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            color: #0f0;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 100;
+            max-width: 300px;
+            white-space: pre-wrap;
+        }
+        #fps {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            color: #0f0;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+            z-index: 100;
+        }
+        #gameCanvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="stats">Connecting...</div>
+    <div id="debug">Debug console</div>
+    <div id="fps">FPS: 0</div>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        // Canvas setup
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Game state
+        const ws = new WebSocket('wss://project-rts.onrender.com');
+        let players = {};
+        let gameState = { enemies: [], projectiles: [], walls: [] };
+        let myId = null;
+        let keys = {};
+        let debugInfo = [];
+
+        // MOVEMENT
+        const SPEED = 4;
+        let myX = 400, myY = 300;
+
+        function debug(...args) {
+            const msg = args.join(' ');
+            debugInfo.unshift(msg);
+            if (debugInfo.length > 8) debugInfo.pop();
+            document.getElementById('debug').innerHTML = debugInfo.join('<br>');
+            console.log(...args);
+        }
+        
+        // FPS counter
+        let frameCount = 0;
+        let lastFpsUpdate = performance.now();
+        let fps = 0;
+
+        // Camera variables
+        let cameraX = 0, cameraY = 0;
+        let targetCameraX = 400, targetCameraY = 300;
+        const CAMERA_SMOOTH = 0.1;
+        let lastTime = performance.now();
+
+        // WebSocket handlers
+        ws.onopen = () => {
+            debug('✅ Connected');
+            document.getElementById('stats').innerHTML = '✅ Connected';
+            ws.send(JSON.stringify({type: 'hello'}));
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'init') {
+                    myId = data.id;
+                    debug('✅ Got ID:', myId);
+                    document.getElementById('stats').innerHTML = `Player ${myId}`;
+                }
+                
+                if (data.type === 'update') {
+                    players = data.players || {};
+                    if (myId && players[myId]) {
+                        delete players[myId];
+                    }
+                }
+            } catch (e) {
+                debug('❌ Error:', e.message);
+            }
+        };
+
+        ws.onclose = () => {
+            debug('❌ Disconnected');
+            document.getElementById('stats').innerHTML = '❌ Disconnected';
+        };
+
+        // Keyboard
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            if (['w','a','s','d','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        // GAME LOOP (combined movement + drawing)
+        function gameLoop() {
+            // Calculate delta time
+            const now = performance.now();
+            const deltaTime = Math.min((now - lastTime) / 16.67, 2); // Normalize to 60fps, cap at 2
+            lastTime = now;
+            
+            // MOVEMENT
+            if (myId) {
+                let moved = false;
+                if (keys['w'] || keys['ArrowUp']) { myY -= SPEED * deltaTime; moved = true; }
+                if (keys['s'] || keys['ArrowDown']) { myY += SPEED * deltaTime; moved = true; }
+                if (keys['a'] || keys['ArrowLeft']) { myX -= SPEED * deltaTime; moved = true; }
+                if (keys['d'] || keys['ArrowRight']) { myX += SPEED * deltaTime; moved = true; }
+
+                myX = Math.max(20, Math.min(2000, myX)); 
+                myY = Math.max(20, Math.min(2000, myY));
+
+                // Set camera target to player position
+                targetCameraX = myX - canvas.width / 2;
+                targetCameraY = myY - canvas.height / 2;
+
+                if (moved) {
+                    ws.send(JSON.stringify({
+                        type: 'move',
+                        x: Math.round(myX),
+                        y: Math.round(myY)
+                    }));
+                }
+            }
+            
+            // SMOOTH CAMERA FOLLOW
+            cameraX += (targetCameraX - cameraX) * CAMERA_SMOOTH * deltaTime;
+            cameraY += (targetCameraY - cameraY) * CAMERA_SMOOTH * deltaTime;
+            
+            // DRAWING
+            // Clear canvas
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Apply camera transform
+            ctx.save();
+            ctx.translate(-cameraX, -cameraY);
+            
+            // Draw grid
+            ctx.strokeStyle = '#2a2a3e';
+            ctx.lineWidth = 1;
+            const startX = Math.floor(cameraX / 50) * 50;
+            const startY = Math.floor(cameraY / 50) * 50;
+            
+            for (let x = startX; x < cameraX + canvas.width + 50; x += 50) {
+                ctx.beginPath();
+                ctx.moveTo(x, cameraY);
+                ctx.lineTo(x, cameraY + canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = startY; y < cameraY + canvas.height + 50; y += 50) {
+                ctx.beginPath();
+                ctx.moveTo(cameraX, y);
+                ctx.lineTo(cameraX + canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // Draw other players - ONLY if it's NOT me
+            for (let id in players) {
+                const p = players[id];
+                if (!p) continue;
+                
+                ctx.fillStyle = '#ff4444';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 20, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.font = '12px Arial';
+                ctx.fillText(`P${id}`, p.x - 15, p.y - 25);
+            }
+            
+            // Draw yourself
+            ctx.fillStyle = '#00ff00';
+            ctx.beginPath();
+            ctx.arc(myX, myY, 20, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.font = '12px Arial';
+            ctx.fillText('You', myX - 15, myY - 25);
+            
+            ctx.restore();
+            
+            // FPS counter
+            frameCount++;
+            if (now - lastFpsUpdate >= 1000) {
+                document.getElementById('fps').innerHTML = `FPS: ${frameCount}`;
+                frameCount = 0;
+                lastFpsUpdate = now;
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Start the game loop
+        gameLoop();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
