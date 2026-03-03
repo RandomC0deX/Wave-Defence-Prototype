@@ -109,7 +109,7 @@
         canvas.height = window.innerHeight;
 
         // Game state
-        const ws = new WebSocket('ws://localhost:10000');
+        const ws = new WebSocket('wss://wave-defence-prototype.onrender.com');
         let players = {};
         let gameState = { enemies: [], projectiles: [], walls: [] };
         let myId = null;
@@ -475,3 +475,4 @@
     </script>
 </body>
 </html>
+
