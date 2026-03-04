@@ -9,4 +9,7 @@ Current Features:
 2. WASD/arrow keys movement
 3. Centred camera
 4. A working chat
-5. World Borders 
+5. World Borders
+6. Gun 💥🔫
+7. Enemies
+9. Mouse detection
