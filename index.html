@@ -100,6 +100,22 @@
             ">Send</button>
         </div>
     </div>
+        <div id="leaderboard" style="
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        width: 200px;
+        background: rgba(0,0,0,0.1);
+        border: 1px solid #444;
+        border-radius: 5px;
+        color: white;
+        padding: 10px;
+        font-family: monospace;
+        z-index: 100;
+        ">
+        <div style="text-align: center; margin-bottom: 5px; color: #4CAF50;">🏆 LEADERBOARD</div>
+        <div id="leaderboardList"></div>
+    </div>
     
     <canvas id="gameCanvas"></canvas>
 
@@ -147,10 +163,12 @@
         const BULLET_SIZE = 5;
         let bullets = [];
         let lastShotTime = 0;
-        const SHOT_COOLDOWN = 500;             
+        const SHOT_COOLDOWN = 150; 
         let isMouseDown = false;
         let autoFireInterval = null;
-        const AUTO_FIRE_RATE = 500;           
+        const AUTO_FIRE_RATE = 150; 
+        let isFiring = false;      
+        let fireInterval = null;
 
         // Enemies
         let enemies = [];
@@ -166,19 +184,17 @@
         const UPDATE_RATE = 50;
         let lastSentAngle = 0;
         let lastSentX = 0, lastSentY = 0;
-        let isConnected = false; // Track connection state
+        let isConnected = false;
 
         // FPS counter
         let frameCount = 0;
         let lastFpsUpdate = performance.now();
-        let fps = 0;
 
         function debug(...args) {
             const msg = args.join(' ');
             debugInfo.unshift(msg);
             if (debugInfo.length > 8) debugInfo.pop();
             document.getElementById('debug').innerHTML = debugInfo.join('<br>');
-            console.log(...args);
         }
 
         ws.onopen = () => {
@@ -193,7 +209,6 @@
             });
         };
 
-        // Track mouse screen position
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
             mouseScreenX = e.clientX - rect.left;
@@ -207,7 +222,6 @@
         });
 
         ws.onmessage = (event) => {
-            console.log('🔵 RAW MESSAGE RECEIVED:', event.data);
             try {
                 const data = JSON.parse(event.data);
                 const chatDiv = document.getElementById('chatMessages');
@@ -216,6 +230,14 @@
                     myId = data.id;
                     debug('✅ Got ID:', myId);
                     document.getElementById('stats').innerHTML = `Player ${myId}`;
+                    
+                    if (data.leaderboard) {
+                        updateLeaderboardDisplay(data.leaderboard);
+                    }
+                }
+
+                if (data.type === 'leaderboard') {
+                    updateLeaderboardDisplay(data.leaderboard);
                 }
 
                 if (data.type === 'update') {
@@ -251,13 +273,12 @@
                 }
 
                 if (data.type === 'chat') {
-                    console.log('📨 Chat received from player', data.playerId, ':', data.message);
                     const message = `[P${data.playerId}]: ${data.message}`;
                     chatMessages.unshift(message);
                     if (chatMessages.length > MAX_CHAT_MESSAGES) chatMessages.pop();
                     const chatDisplay = document.getElementById('chatMessages');
                     if (chatDisplay) {
-                        chatDisplay.innerHTML = chatMessages.map(msg => `<div style="color:white; margin:2px 0;">${msg}</div>`).join('');
+                        chatDisplay.innerHTML = chatMessages.map(msg => `<div style="margin:2px 0;">${msg}</div>`).join('');
                     }
                 }
 
@@ -272,7 +293,6 @@
             isConnected = false;
         };
 
-        // Keyboard controls
         document.addEventListener('keydown', (e) => {
             if (document.activeElement === document.getElementById('chatInput')) {
                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') e.preventDefault();
@@ -285,7 +305,6 @@
                 e.preventDefault();
                 debugVisible = !debugVisible;
                 document.getElementById('debug').style.display = debugVisible ? 'block' : 'none';
-                if (debugVisible) debug('🔧 Debug mode ON');
             }
         });
 
@@ -294,46 +313,73 @@
             keys[e.key] = false;
         });
 
+        let lastMouseX = 0, lastMouseY = 0;
+        canvas.addEventListener('mousemove', (e) => {
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+        });
+
         // Shooting
         canvas.addEventListener('mousedown', (e) => {
             e.preventDefault();
             e.stopPropagation();
             if (!myId || !isConnected) return;
-            isMouseDown = true;
-            shootBullet(e);
-            if (autoFireInterval) clearInterval(autoFireInterval);
-            autoFireInterval = setInterval(() => {
-                if (isMouseDown && myId && isConnected) {
-                    const fakeEvent = {
-                        clientX: lastMouseX,
-                        clientY: lastMouseY,
-                        preventDefault: () => {}
-                    };
-                    shootBullet(fakeEvent);
+            
+            isFiring = true;
+            
+            if (fireInterval) {
+                clearInterval(fireInterval);
+                fireInterval = null;
+            }
+            
+            fireInterval = setInterval(() => {
+                if (isFiring && myId && isConnected) {
+                    const now = Date.now();
+                    if (now - lastShotTime >= SHOT_COOLDOWN) {
+                        lastShotTime = now;
+                        
+                        const rect = canvas.getBoundingClientRect();
+                        const worldX = lastMouseX - rect.left + cameraX;
+                        const worldY = lastMouseY - rect.top + cameraY;
+
+                        const dx = worldX - myX;
+                        const dy = worldY - myY;
+                        const distance = Math.hypot(dx, dy);
+                        
+                        if (distance >= 10) {
+                            const bullet = {
+                                id: Math.random().toString(36).substr(2, 9),
+                                x: myX,
+                                y: myY,
+                                vx: (dx / distance) * BULLET_SPEED,
+                                vy: (dy / distance) * BULLET_SPEED,
+                                owner: myId,
+                                damage: 1,
+                                createdAt: Date.now()
+                            };
+
+                            bullets.push(bullet);
+                            ws.send(JSON.stringify({type: 'shoot', bullet}));
+                        }
+                    }
                 }
-            }, AUTO_FIRE_RATE);
+            }, 16);
         });
 
         canvas.addEventListener('mouseup', () => {
-            isMouseDown = false;
-            if (autoFireInterval) {
-                clearInterval(autoFireInterval);
-                autoFireInterval = null;
+            isFiring = false;
+            if (fireInterval) {
+                clearInterval(fireInterval);
+                fireInterval = null;
             }
         });
 
         canvas.addEventListener('mouseleave', () => {
-            isMouseDown = false;
-            if (autoFireInterval) {
-                clearInterval(autoFireInterval);
-                autoFireInterval = null;
+            isFiring = false;
+            if (fireInterval) {
+                clearInterval(fireInterval);
+                fireInterval = null;
             }
-        });
-
-        let lastMouseX = 0, lastMouseY = 0;
-        canvas.addEventListener('mousemove', (e) => {
-            lastMouseX = e.clientX;
-            lastMouseY = e.clientY;
         });
 
         function sendChatMessage() {
@@ -343,40 +389,6 @@
             ws.send(JSON.stringify({type: 'chat', message}));
             input.value = '';
             canvas.focus();
-            debug('✅ Message sent');
-        }
-
-        function shootBullet(e) {
-            e?.preventDefault();
-            if (e && e.preventDefault) e.preventDefault();
-            if (e && e.stopPropagation) e.stopPropagation();
-            if (!myId || !isConnected) return; 
-
-            const now = Date.now();
-            if (now - lastShotTime < SHOT_COOLDOWN) return;
-            lastShotTime = now;
-
-            const rect = canvas.getBoundingClientRect();
-            const worldX = e.clientX - rect.left + cameraX;
-            const worldY = e.clientY - rect.top + cameraY;
-
-            const dx = worldX - myX;
-            const dy = worldY - myY;
-            const distance = Math.hypot(dx, dy);
-            if (distance < 10) return;
-
-            const bullet = {
-                id: Math.random().toString(36).substr(2, 9),
-                x: myX,
-                y: myY,
-                vx: (dx / distance) * BULLET_SPEED,
-                vy: (dy / distance) * BULLET_SPEED,
-                owner: myId,
-                createdAt: Date.now()
-            };
-
-            bullets.push(bullet);
-            ws.send(JSON.stringify({type: 'shoot', bullet}));
         }
 
         function spawnTestEnemy() {
@@ -391,14 +403,12 @@
                 size: ENEMY_SIZE
             };
             ws.send(JSON.stringify({type: 'spawn_enemy', enemy}));
-            debug(`🧟 Spawned test enemy at (${Math.round(enemy.x)}, ${Math.round(enemy.y)})`);
         }
-        
+
         function drawPlayer(x, y, color, isMe, angle, mouseX, mouseY) {
             ctx.save();
             ctx.translate(x, y);
             
-            // Rotate the whole character
             ctx.rotate(angle + 1.57);
             
             // Body
@@ -425,24 +435,53 @@
             ctx.arc(5, -5, 4, 0, Math.PI * 2);
             ctx.fill();
             
-            // Direction to target 
-            const dx = mouseX - x;
-            const dy = mouseY - y;
+            const VIEW_RANGE = 300;
+            
+            let lookX = mouseX;
+            let lookY = mouseY;
+            let closestDist = Infinity;
+            let closestTarget = null;
+            
+            for (let enemy of enemies) {
+                const dist = Math.hypot(enemy.x - x, enemy.y - y);
+                if (dist < VIEW_RANGE && dist < closestDist) {
+                    closestDist = dist;
+                    closestTarget = enemy;
+                }
+            }
+            
+            if (!closestTarget) {
+                for (let id in players) {
+                    if ((id === myId?.toString() && isMe) || (players[id].x === x && players[id].y === y)) continue;
+                    
+                    const p = players[id];
+                    const dist = Math.hypot(p.x - x, p.y - y);
+                    if (dist < VIEW_RANGE && dist < closestDist) {
+                        closestDist = dist;
+                        closestTarget = p;
+                    }
+                }
+            }
+            
+            if (closestTarget) {
+                lookX = closestTarget.x;
+                lookY = closestTarget.y;
+            }
+            
+            const dx = lookX - x;
+            const dy = lookY - y;
             
             if (dx !== 0 || dy !== 0) {
-                // Normalize world direction
                 const worldLen = Math.hypot(dx, dy);
                 const worldNormX = dx / worldLen;
                 const worldNormY = dy / worldLen;
                 
-                // Transform world direction to character's local space
                 const rotAngle = angle + 1.57;
                 const cos = Math.cos(-rotAngle);
                 const sin = Math.sin(-rotAngle);
                 const localX = worldNormX * cos - worldNormY * sin;
                 const localY = worldNormX * sin + worldNormY * cos;
                 
-                // Pupil offset (max 2.5 to stay inside eye)
                 const pupilOffsetX = localX * 2.5;
                 const pupilOffsetY = localY * 2.5;
                 
@@ -464,23 +503,37 @@
             }
             
             ctx.restore();
+        }    
+       
+        function updateLeaderboardDisplay(leaderboardData) {
+            const leaderboardList = document.getElementById('leaderboardList');
+            if (!leaderboardList) return;
+            
+            let html = '';
+            leaderboardData.forEach((entry, index) => {
+                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '•';
+                const highlight = entry.id === myId ? ' style="color: #4CAF50"' : '';
+                html += `<div${highlight}>${medal} ${entry.name}: ${entry.score}</div>`;
+            });
+            
+            if (leaderboardData.length === 0) {
+                html = '<div style="color: #888;">No scores yet</div>';
+            }
+            
+            leaderboardList.innerHTML = html;
         }
 
         function gameLoop() {
             const nowPerf = performance.now();
             const deltaTime = (nowPerf - lastTime) / 1000;
             lastTime = nowPerf;
-            ctx.imageSmoothingEnabled = false;
 
-            // Clear canvas with background
             ctx.fillStyle = '#1a1a2e';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Calculate current mouse world position
             const mouseWorldX = mouseScreenX + cameraX;
             const mouseWorldY = mouseScreenY + cameraY;
 
-            // Calculate angle to mouse
             let playerAngle = 0;
             const now = Date.now();
 
@@ -492,12 +545,11 @@
                 }
             }
 
-            // Movement
             if (myId) {
-                if (keys['w'] || keys['ArrowUp']) { myY -= SPEED; }
-                if (keys['s'] || keys['ArrowDown']) { myY += SPEED; }
-                if (keys['a'] || keys['ArrowLeft']) { myX -= SPEED; }
-                if (keys['d'] || keys['ArrowRight']) { myX += SPEED; }
+                if (keys['w'] || keys['ArrowUp'] || keys['W']) { myY -= SPEED; }
+                if (keys['s'] || keys['ArrowDown'] || keys['S']) { myY += SPEED; }
+                if (keys['a'] || keys['ArrowLeft'] || keys['A']) { myX -= SPEED; }
+                if (keys['d'] || keys['ArrowRight'] || keys['D']) { myX += SPEED; }
 
                 myX = Math.max(20, Math.min(WORLD_WIDTH - 20, myX));
                 myY = Math.max(20, Math.min(WORLD_HEIGHT - 20, myY));
@@ -506,7 +558,6 @@
                 targetCameraY = myY - canvas.height / 2;
             }
 
-            // Server update (periodic) - only if connected
             if (isConnected) {
                 const timeToSend = now - lastUpdateTime > UPDATE_RATE;
                 const positionChanged = Math.abs(myX - lastSentX) > 1 || Math.abs(myY - lastSentY) > 1;
@@ -527,7 +578,6 @@
                 }
             }
 
-            // Bullet movement
             bullets.forEach(b => {
                 b.x += b.vx * deltaTime;
                 b.y += b.vy * deltaTime;
@@ -538,11 +588,9 @@
                 return true;
             });
 
-            // Camera follow
             cameraX += (targetCameraX - cameraX) * CAMERA_SMOOTH;
             cameraY += (targetCameraY - cameraY) * CAMERA_SMOOTH;
 
-            // Drawing
             ctx.save();
             ctx.translate(-cameraX, -cameraY);
 
@@ -566,16 +614,13 @@
             const endX = Math.min(WORLD_WIDTH, cameraX + canvas.width);
             const endY = Math.min(WORLD_HEIGHT, cameraY + canvas.height);
 
-            // Draw vertical grid lines
             for (let x = startX; x <= endX; x += 50) {
                 ctx.beginPath();
                 ctx.moveTo(x, Math.max(0, cameraY));
                 ctx.lineTo(x, Math.min(WORLD_HEIGHT, cameraY + canvas.height));
-                ctx.strokeStyle = GRID_COLOR;
                 ctx.stroke();
             }
 
-            // Draw horizontal grid lines
             for (let y = startY; y <= endY; y += 50) {
                 ctx.beginPath();
                 ctx.moveTo(Math.max(0, cameraX), y);
@@ -605,21 +650,18 @@
                 ctx.fill();
             }
 
-            // Draw other players with hands
+            // Draw other players
             for (let id in players) {
                 if (id === myId?.toString()) continue;
                 const p = players[id];
                 
-                // Other players look at you
                 drawPlayer(p.x, p.y, '#ff4444', false, p.angle || 0, myX || 0, myY || 0);
 
-                // Health bar 
                 ctx.fillStyle = '#ff0000';
                 ctx.fillRect(p.x - 20, p.y - 30, 40, 5);
                 ctx.fillStyle = '#00ff00';
                 ctx.fillRect(p.x - 20, p.y - 30, 40 * (p.health / 100), 5);
                 
-                // Player ID
                 ctx.fillStyle = '#fff';
                 ctx.font = '12px Arial';
                 const text = `P${id}`;
@@ -627,17 +669,15 @@
                 ctx.fillText(text, p.x - textWidth/2, p.y - 40);
             }
 
-            // Draw yourself with hands
+            // Draw yourself
             if (myId && players[myId]) {
                 drawPlayer(myX, myY, '#00ff00', true, playerAngle, mouseWorldX, mouseWorldY);
 
-                // Health bar
                 ctx.fillStyle = '#ff0000';
                 ctx.fillRect(myX - 20, myY - 30, 40, 5);
                 ctx.fillStyle = '#00ff00';
                 ctx.fillRect(myX - 20, myY - 30, 40 * (players[myId].health / 100), 5);
 
-                // "You" label
                 ctx.fillStyle = '#fff';
                 ctx.font = '12px Arial';
                 const youText = 'You';
@@ -647,7 +687,6 @@
 
             ctx.restore();
 
-            // FPS counter
             frameCount++;
             if (nowPerf - lastFpsUpdate >= 1000) {
                 document.getElementById('fps').innerHTML = `FPS: ${frameCount}`;
@@ -672,5 +711,3 @@
     </script>
 </body>
 </html>
-
-
