@@ -13,3 +13,4 @@ Current Features:
 6. Gun 💥🔫
 7. Enemies
 9. Mouse detection
+10. A leader board with scores
