@@ -13,12 +13,32 @@ clients = set()
 enemies = []
 walls = []
 bullets = []
+leaderboard = []
+
+async def broadcast_leaderboard():
+    """Send leaderboard updates to all clients"""
+    if not clients:
+        return
+    
+    # Sort players by score (highest first)
+    sorted_players = sorted(
+        [{"id": pid, "score": p["score"], "name": p.get("name", f"Player{pid}")} 
+         for pid, p in players.items()],
+        key=lambda x: x["score"],
+        reverse=True
+    )[:10]  # Top 10
+    
+    leaderboard_msg = json.dumps({
+        "type": "leaderboard",
+        "leaderboard": sorted_players
+    })
+    
+    await asyncio.gather(*(client.send(leaderboard_msg) for client in clients), return_exceptions=True)
 
 async def move_bullets():
     while True:
-        await asyncio.sleep(0.05)   # 20 updates per second
+        await asyncio.sleep(0.05)
         for bullet in bullets[:]:
-            # Time‑based movement 
             bullet["x"] += bullet["vx"] * 0.05
             bullet["y"] += bullet["vy"] * 0.05
 
@@ -31,11 +51,25 @@ async def move_bullets():
             # Enemy collisions
             for enemy in enemies[:]:
                 dist = math.hypot(bullet["x"] - enemy["x"], bullet["y"] - enemy["y"])
-                if dist < 18 + 5:   # ENEMY_SIZE + BULLET_SIZE
-                    enemy["health"] -= 1
-                    bullets.remove(bullet)
+                if dist < 18 + 5:
+                    # Calculate damage dealt
+                    bullet_damage = bullet.get("damage", 1)  # Default to 1 damage
+                    health_before = enemy["health"]
+                    enemy["health"] -= bullet_damage
+                    damage_dealt = health_before - max(0, enemy["health"])  # Can't go negative
+                    
+                    # Award points based on actual damage dealt (1 point per damage)
+                    if bullet["owner"] in players and damage_dealt > 0:
+                        players[bullet["owner"]]["score"] = players[bullet["owner"]].get("score", 0) + damage_dealt
+                    
+                    # If enemy dies, remove it
                     if enemy["health"] <= 0:
                         enemies.remove(enemy)
+                    
+                    bullets.remove(bullet)
+                    
+                    # Broadcast updated leaderboard after any score change
+                    await broadcast_leaderboard()
                     break
 
 # Enemy movement and collision task
@@ -128,32 +162,40 @@ async def handle_client(websocket):
     next_player_id += 1
     clients.add(websocket)
     
-    # Player starts at center
+    # Player starts at center with score
     players[player_id] = {
         "x": 400,
         "y": 300,
         "angle": 0,
         "health": 100,
-        "score": 0
+        "score": 0,
+        "name": f"Player{player_id}"  # Default name
     }
 
     print(f"Player {player_id} connected. Total players: {len(players)}")
     
-    # Send player their ID
+    # Send player their ID and current leaderboard
     await websocket.send(json.dumps({
         "type": "init", 
-        "id": player_id
+        "id": player_id,
+        "leaderboard": [{"id": pid, "score": p["score"], "name": p.get("name", f"Player{pid}")} 
+                        for pid, p in sorted(players.items(), key=lambda x: x[1]["score"], reverse=True)[:10]]
     }))
 
     try:
         async for message in websocket:
             data = json.loads(message)
-            print(f"Received from player {player_id}: {data}")  
+            print(f"Received from player {player_id}: {data['type']}")  
 
             if data["type"] == "move":
                 players[player_id]["x"] = data["x"]
                 players[player_id]["y"] = data["y"]
                 players[player_id]["angle"] = data["angle"]
+            
+            elif data["type"] == "set_name":
+                # Allow player to set custom name
+                players[player_id]["name"] = data["name"][:15]  # Limit length
+                await broadcast_leaderboard()
             
             elif data["type"] == "chat":
                 print(f"📨 Chat from player {player_id}: {data['message']}")
@@ -161,32 +203,20 @@ async def handle_client(websocket):
                 chat_message = json.dumps({
                     "type": "chat",
                     "playerId": player_id,
+                    "playerName": players[player_id].get("name", f"Player{player_id}"),
                     "message": data["message"]
                 })
                 
                 await asyncio.gather(*(client.send(chat_message) for client in clients))
-                print(f"✅ Chat broadcast complete")
                 
             elif data["type"] == "shoot":
-                
-                # Add bullet to server's list
                 bullet = data["bullet"]
                 bullet["owner"] = player_id
                 bullets.append(bullet)
                 
-                # Broadcast bullet to all clients 
-                bullet_msg = json.dumps({
-                    "type": "bullet",
-                    "playerId": player_id,
-                    "bullet": bullet
-                })
-                await asyncio.gather(*(client.send(bullet_msg) for client in clients))
-                
             elif data["type"] == "spawn_enemy":
-                print(f"🧟 Player {player_id} spawned an enemy at ({data['enemy']['x']}, {data['enemy']['y']})")
-                print(f"Current enemy count: {len(enemies)}")
+                print(f"🧟 Player {player_id} spawned an enemy")
                 enemies.append(data["enemy"])
-                print(f"New enemy count: {len(enemies)}")
             
             # Broadcast game state after each message
             game_update = json.dumps({
@@ -196,15 +226,15 @@ async def handle_client(websocket):
                 "bullets": bullets
             })
             await asyncio.gather(*(client.send(game_update) for client in clients))
-            print(f"Broadcasting update with {len(enemies)} enemies")
             
     except websockets.exceptions.ConnectionClosed:
         print(f"Player {player_id} disconnected")
+        # Broadcast leaderboard when player leaves
+        await broadcast_leaderboard()
     finally:
         if player_id in players:
             del players[player_id]
         clients.remove(websocket)
-        print(f"Player {player_id} removed. Total players: {len(players)}")
 
 async def main():
     port = int(os.environ.get('PORT', 10000))
