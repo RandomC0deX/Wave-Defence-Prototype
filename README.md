@@ -14,3 +14,9 @@ Current Features:
 7. Enemies
 9. Mouse detection
 10. A leader board with scores
+11. Health Bar
+12. Score indicator
+13. Waves
+14. Different types of enemies
+15. Bosses
+16. Animations
