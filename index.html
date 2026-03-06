@@ -413,7 +413,7 @@
         canvas.focus();
 
         // Game state
-        const ws = new WebSocket('ws://localhost:10000');
+        const ws = new WebSocket('wss://wave-defence-prototype.onrender.com');
         document.getElementById('stateDisplay').classList.add('connecting');
         
         let players = {};
@@ -1661,3 +1661,4 @@
     </script>
 </body>
 </html>
+
