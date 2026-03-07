@@ -797,7 +797,7 @@ async def broadcast_updates():
             await asyncio.gather(*(client.send(game_update) for client in clients), return_exceptions=True)
 
 async def main():
-    port = int(os.environ.get('PORT', 8080))
+    port = int(os.environ.get('PORT', 10000))
     
     print(f"🚀 Starting server on port {port}...")
     print(f"   Enemy update rate: {1/ENEMY_UPDATE_RATE:.0f} FPS")
@@ -818,4 +818,5 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
