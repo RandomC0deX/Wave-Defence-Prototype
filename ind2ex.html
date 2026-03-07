@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+const ws = new WebSocket('wss://ran.taila641d5.ts.net:10000');
+ws.onopen = () => document.body.innerHTML = 'CONNECTED';
+ws.onerror = (e) => document.body.innerHTML = 'ERROR: ' + e;
+ws.onclose = () => document.body.innerHTML = 'CLOSED';
+</script>
+</body>
+</html>
