@@ -413,7 +413,7 @@
         canvas.focus();
 
         // Game state
-        const ws = new WebSocket('wss://wave-defence-prototype.onrender.com');
+        const ws = new WebSocket('wss://ran.taila641d5.ts.net:10000');
         document.getElementById('stateDisplay').classList.add('connecting');
         
         let players = {};
@@ -1139,17 +1139,24 @@
                 document.getElementById('fps').style.display = debugVisible ? 'block' : 'none';
             }
 
-            if (e.key === 'Enter' && document.activeElement !== document.getElementById('chatInput')) {
-                e.preventDefault();
+            if (e.key === 'Enter') {
                 const chatContainer = document.getElementById('chatContainer');
                 const chatInput = document.getElementById('chatInput');
                 
-                if (chatContainer.classList.contains('collapsed')) {
-                    chatContainer.classList.remove('collapsed');
-                    setTimeout(() => chatInput.focus(), 200);
-                } else if (chatInput.value.trim() === '') {
-                    chatInput.blur();
-                    chatContainer.classList.add('collapsed');
+                if (document.activeElement === chatInput) {
+                    e.preventDefault();
+                    sendChatMessage();
+                } 
+                else {
+                    e.preventDefault();
+                    
+                    if (chatContainer.classList.contains('collapsed')) {
+                        chatContainer.classList.remove('collapsed');
+                        setTimeout(() => chatInput.focus(), 200);
+                    } else {
+                        chatInput.blur();
+                        chatContainer.classList.add('collapsed');
+                    }
                 }
             }
         });
@@ -1661,4 +1668,3 @@
     </script>
 </body>
 </html>
-
