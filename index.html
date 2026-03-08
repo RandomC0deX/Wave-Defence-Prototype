@@ -821,7 +821,7 @@
         let isInGame = false;
 
         // Movement
-        const SPEED = 200;
+        const SPEED = 110;
         let myX = 400, myY = 300;
 
         // Camera
@@ -855,7 +855,7 @@
         let bullets = [];
         let enemy_bullets = [];
         let lastShotTime = 0;
-        const SHOT_COOLDOWN = 50; 
+        const SHOT_COOLDOWN = 500; 
         let isFiring = false;      
         let fireInterval = null;
         const DAMAGE = 5;
@@ -898,7 +898,7 @@
         document.getElementById('mainMenu').style.display = 'none';
 
         // Create connection and set up handlers immediately
-        ws = new WebSocket('wss://ran.taila641d5.ts.net');
+        ws = new WebSocket('ws://localhost:10000');
 
         ws.onopen = () => {
             debug('✅ Connected to server');
@@ -1399,9 +1399,6 @@
             if (e.key === 'Escape' && document.getElementById('mainMenu').style.display !== 'flex') {
                 showMainMenu();
             }
-            if (e.key === 'e' || e.key === 'E') {
-                spawnBoss();
-            }
         });
 
         document.getElementById('playerNameInput').addEventListener('keypress', (e) => {
@@ -1412,103 +1409,103 @@
         });
 
         function initMobileControls() {
-    if (!isMobile) return;
-    
-    document.getElementById('mobileControls').style.display = 'block';
-    
-    // D-Pad buttons
-    const dpadUp = document.getElementById('dpadUp');
-    const dpadDown = document.getElementById('dpadDown');
-    const dpadLeft = document.getElementById('dpadLeft');
-    const dpadRight = document.getElementById('dpadRight');
-    
-    // Touch start handlers
-    dpadUp.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        mobileMovement.up = true;
-        dpadUp.classList.add('active');
-    });
-    dpadUp.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        mobileMovement.up = false;
-        dpadUp.classList.remove('active');
-    });
-    
-    dpadDown.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        mobileMovement.down = true;
-        dpadDown.classList.add('active');
-    });
-    dpadDown.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        mobileMovement.down = false;
-        dpadDown.classList.remove('active');
-    });
-    
-    dpadLeft.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        mobileMovement.left = true;
-        dpadLeft.classList.add('active');
-    });
-    dpadLeft.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        mobileMovement.left = false;
-        dpadLeft.classList.remove('active');
-    });
-    
-    dpadRight.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        mobileMovement.right = true;
-        dpadRight.classList.add('active');
-    });
-    dpadRight.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        mobileMovement.right = false;
-        dpadRight.classList.remove('active');
-    });
-    
-    // Aim joystick
-    const aimStick = document.getElementById('aimJoystick');
-    const aimHandle = document.getElementById('aimHandle');
-    
-    aimStick.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        aimJoystick.active = true;
-        updateAimJoystick(e.touches[0]);
-    });
-    
-    aimStick.addEventListener('touchmove', (e) => {
-        e.preventDefault();
-        if (aimJoystick.active) {
-            updateAimJoystick(e.touches[0]);
+            if (!isMobile) return;
+            
+            document.getElementById('mobileControls').style.display = 'block';
+            
+            // D-Pad buttons
+            const dpadUp = document.getElementById('dpadUp');
+            const dpadDown = document.getElementById('dpadDown');
+            const dpadLeft = document.getElementById('dpadLeft');
+            const dpadRight = document.getElementById('dpadRight');
+            
+            // Touch start handlers
+            dpadUp.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                mobileMovement.up = true;
+                dpadUp.classList.add('active');
+            });
+            dpadUp.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                mobileMovement.up = false;
+                dpadUp.classList.remove('active');
+            });
+            
+            dpadDown.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                mobileMovement.down = true;
+                dpadDown.classList.add('active');
+            });
+            dpadDown.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                mobileMovement.down = false;
+                dpadDown.classList.remove('active');
+            });
+            
+            dpadLeft.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                mobileMovement.left = true;
+                dpadLeft.classList.add('active');
+            });
+            dpadLeft.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                mobileMovement.left = false;
+                dpadLeft.classList.remove('active');
+            });
+            
+            dpadRight.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                mobileMovement.right = true;
+                dpadRight.classList.add('active');
+            });
+            dpadRight.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                mobileMovement.right = false;
+                dpadRight.classList.remove('active');
+            });
+            
+            // Aim joystick
+            const aimStick = document.getElementById('aimJoystick');
+            const aimHandle = document.getElementById('aimHandle');
+            
+            aimStick.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                aimJoystick.active = true;
+                updateAimJoystick(e.touches[0]);
+            });
+            
+            aimStick.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (aimJoystick.active) {
+                    updateAimJoystick(e.touches[0]);
+                }
+            });
+            
+            aimStick.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                aimJoystick.active = false;
+                aimJoystick.force = 0;
+                aimHandle.style.transform = 'translate(-50%, -50%)';
+            });
+            
+            // Shoot button
+            const shootBtn = document.getElementById('mobileShootBtn');
+            shootBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (!isGhost) {
+                    isFiring = true;
+                    startFiring();
+                }
+            });
+            shootBtn.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                isFiring = false;
+                if (fireInterval) {
+                    clearInterval(fireInterval);
+                    fireInterval = null;
+                }
+            });
         }
-    });
-    
-    aimStick.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        aimJoystick.active = false;
-        aimJoystick.force = 0;
-        aimHandle.style.transform = 'translate(-50%, -50%)';
-    });
-    
-    // Shoot button
-    const shootBtn = document.getElementById('mobileShootBtn');
-    shootBtn.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        if (!isGhost) {
-            isFiring = true;
-            startFiring();
-        }
-    });
-    shootBtn.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        isFiring = false;
-        if (fireInterval) {
-            clearInterval(fireInterval);
-            fireInterval = null;
-        }
-    });
-}
 
         function updateAimJoystick(touch) {
             const aimStick = document.getElementById('aimJoystick');
@@ -1638,7 +1635,7 @@
             };
             
             ws.send(JSON.stringify({
-                type: 'spawn_boss', 
+                type: 'spawn_boss',
                 boss: boss
             }));
             
@@ -1969,7 +1966,7 @@
             
             keys[e.key] = true;
             if (['w','a','s','d','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
-            if (e.key === 'e' || e.key === 'E') spawnTestEnemy();
+            if (e.key === 'e' || e.key === 'E') spawnBoss();
             
             if (e.code === 'Backquote') {
                 e.preventDefault();
@@ -2516,6 +2513,3 @@
     </script>
 </body>
 </html>
-
-
-
