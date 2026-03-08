@@ -124,6 +124,338 @@
             z-index: 1000;
             white-space: nowrap;
         }
+
+        #playerName,
+        #waveInfo,
+        #leaderboard,
+        #hpBarContainer,
+        #Score,
+        #chatContainer,
+        #bottomRightContainer {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .game-active #playerName,
+        .game-active #waveInfo,
+        .game-active #leaderboard,
+        .game-active #hpBarContainer,
+        .game-active #Score,
+        .game-active #chatContainer,
+        .game-active #bottomRightContainer {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .game-active #chatContainer {
+            pointer-events: auto;
+        }
+
+        .game-active #bottomRightContainer {
+            opacity: 0.8;
+        }
+
+        #mainMenu {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.1);
+            z-index: 30000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .menu-container {
+            background: rgba(10, 10, 10, 0);
+            border: 2px solid #4CAF50;
+            border-radius: 30px;
+            padding: 50px;
+            min-width: 550px;
+            box-shadow: 0 0 60px rgba(76, 175, 80, 0.3);
+            animation: menuAppear 0.5s ease;
+        }
+
+        @keyframes menuAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .game-title {
+            font-size: 72px;
+            color: #4CAF50;
+            text-shadow: 0 0 30px #4CAF50;
+            margin-bottom: 40px;
+            letter-spacing: 4px;
+            animation: titlePulse 2s ease-in-out infinite;
+        }
+
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .menu-btn {
+            background: rgba(76, 175, 80, 0.1);
+            border: 2px solid #4CAF50;
+            color: white;
+            font-size: 24px;
+            padding: 15px 30px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            font-weight: bold;
+            width: 100%;
+        }
+
+        .menu-btn:hover {
+            background: #4CAF50;
+            transform: translateY(-3px);
+        }
+
+        .play-btn {
+            background: #4CAF50;
+            font-size: 32px;
+            border-width: 3px;
+            margin-bottom: 10px;
+        }
+
+        .btn-icon {
+            font-size: 28px;
+        }
+
+        .name-input-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        #playerNameInput {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            padding: 12px 20px;
+            color: white;
+            font-size: 18px;
+            outline: none;
+        }
+
+        #playerNameInput:focus {
+            border-color: #7aff7a;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+        }
+
+        .name-set-btn {
+            background: #4CAF50;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 25px;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .name-set-btn:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+
+        .menu-footer {
+            display: flex;
+            justify-content: space-between;
+            color: #888;
+            font-size: 14px;
+            border-top: 1px solid #333;
+            padding-top: 20px;
+        }
+
+        .online-count {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #4CAF50;
+        }
+
+        .online-dot {
+            width: 10px;
+            height: 10px;
+            background: #4CAF50;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        #mobileControls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5000;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            #mobileControls {
+                display: block;
+            }
+ 
+            body {
+                cursor: none;
+            }
+        }
+
+        #dpad {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            pointer-events: auto;
+        }
+
+        .dpad-container {
+            width: 180px;
+            height: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dpad-middle-row {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .dpad-btn {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+            color: white;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: all 0.1s;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .dpad-btn:active {
+            background: rgba(76, 175, 80, 0.6);
+            transform: scale(0.95);
+            border-color: #4CAF50;
+        }
+
+        .dpad-btn.active {
+            background: rgba(76, 175, 80, 0.8);
+            border-color: #4CAF50;
+        }
+
+        .dpad-center {
+            width: 60px;
+            height: 60px;
+        }
+
+        #rightControls {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            pointer-events: auto;
+        }
+
+        .joystick {
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            backdrop-filter: blur(5px);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .joystick-handle {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #333;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+            user-select: none;
+        }
+
+        .mobile-shoot-btn {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 0, 0, 0.4);
+            border: 3px solid #ff4444;
+            backdrop-filter: blur(5px);
+            color: white;
+            font-size: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.4);
+            transition: all 0.1s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .mobile-shoot-btn:active {
+            transform: scale(0.9);
+            background: rgba(255, 0, 0, 0.8);
+            box-shadow: 0 4px 20px rgba(255, 0, 0, 0.8);
+        }
+
+        @media (max-width: 768px) {
+            #fps, #debug {
+                font-size: 10px;
+                opacity: 0.7;
+            }
+        }
         
         #leaderboard {
             position: fixed;
@@ -257,7 +589,10 @@
         }
         
         #chatContainer:not(.collapsed) {
-            height: 300px;
+            height: auto;
+            max-height: 300px;
+            min-height: 100px;
+            overflow: hidden;
         }
         
         #chatHeader {
@@ -287,7 +622,7 @@
         }
         
         #chatMessages {
-            height: 200px;
+            max-height: calc(100% - 50px);
             overflow-y: auto;
             padding: 8px;
             color: white;
@@ -297,6 +632,11 @@
             flex-direction: column-reverse;
             border-bottom: 1px solid #444;
             background: rgba(0,0,0,0.1);
+            word-wrap: break-word;      
+            word-break: break-all;      
+            white-space: normal;       
+            line-height: 1.4;      
+            overflow: hidden;     
         }
         
         .chat-input-container {
@@ -354,6 +694,53 @@
 </head>
 <body>
     <div id="stateDisplay">STATE: Connecting...</div>
+
+    <!-- Main Menu Screen -->
+    <div id="mainMenu">
+        <div class="menu-container">
+            <h1 class="game-title">WAVE DEFENSE</h1>
+            
+            <div class="menu-buttons">
+                <button class="menu-btn play-btn" onclick="startGame()">
+                    <span class="btn-icon">▶</span> PLAY
+                </button>
+            </div>
+
+            <div class="name-input-container">
+                <input type="text" id="playerNameInput" maxlength="15" placeholder="ENTER YOUR NAME" value="Player">
+                <button class="name-set-btn" onclick="setPlayerName()">SET</button>
+            </div>
+
+            <div class="menu-footer">
+                <div class="online-count">
+                    <span class="online-dot"></span>
+                    <span id="onlinePlayers">0</span> Players Online
+                </div>
+                <div class="version">v0.1.0</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="mobileControls" style="display: none;">
+        <div id="dpad">
+            <div class="dpad-container">
+                <button class="dpad-btn up" id="dpadUp">▲</button>
+                <div class="dpad-middle-row">
+                    <button class="dpad-btn left" id="dpadLeft">◀</button>
+                    <div class="dpad-center"></div>
+                    <button class="dpad-btn right" id="dpadRight">▶</button>
+                </div>
+                <button class="dpad-btn down" id="dpadDown">▼</button>
+            </div>
+        </div>
+
+        <div id="rightControls">
+            <div id="aimJoystick" class="joystick">
+                <div class="joystick-handle" id="aimHandle">⚫</div>
+            </div>
+            <button id="mobileShootBtn" class="mobile-shoot-btn">🔫</button>
+        </div>
+    </div>
 
     <div id="respawnScreen">
         <div class="container">
@@ -413,11 +800,10 @@
         canvas.focus();
 
         // Game state
-        const ws = new WebSocket('wss://ran.taila641d5.ts.net');
-        document.getElementById('stateDisplay').classList.add('connecting');
-        
+        let ws = null;
         let players = {};
         let myId = null;
+        let currentPlayerName = "Player";
         let keys = {};
         let debugInfo = [];
         let lastPlayerCount = 0;
@@ -432,6 +818,7 @@
         let isDead = false;
         let isGhost = false;
         const GHOST_ALPHA = 0.5;
+        let isInGame = false;
 
         // Movement
         const SPEED = 110;
@@ -442,6 +829,17 @@
         let targetCameraX = 400, targetCameraY = 300;
         const CAMERA_SMOOTH = 0.1;
         let lastTime = performance.now();
+
+        // Menu camera movement
+        let menuCameraAngle = 0;
+        const MENU_CAMERA_SPEED = 0.2;
+        const MENU_CAMERA_RADIUS = 200;
+        let menuCenterX = 1000, menuCenterY = 1000;
+
+        // Mobile Controls
+        let mobileMovement = { up: false, down: false, left: false, right: false };
+        let aimJoystick = { active: false, x: 0, y: 0, angle: 0, force: 0 };
+        let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
         // World boundaries
         const WORLD_WIDTH = 2000;
@@ -454,8 +852,6 @@
         const MAX_CHAT_MESSAGES = 50;
 
         // Bullet system
-        const BULLET_SPEED = 300;               
-        const BULLET_SIZE = 5;
         let bullets = [];
         let enemy_bullets = [];
         let lastShotTime = 0;
@@ -463,6 +859,8 @@
         let isFiring = false;      
         let fireInterval = null;
         const DAMAGE = 5;
+        const BULLET_SPEED = 300;
+        const BULLET_SIZE = 5;
 
         // Enemies
         let enemies = [];
@@ -473,8 +871,9 @@
         // Interpolation
         let interpolatedEnemies = [];
         let interpolatedPlayers = {};
+        let interpolatedBullets = []; 
         let interpolatedEnemyBullets = [];
-
+        
         // Mouse
         let mouseScreenX = 400, mouseScreenY = 300;
         let lastMouseX = 0, lastMouseY = 0;
@@ -489,6 +888,102 @@
         // FPS
         let frameCount = 0;
         let lastFpsUpdate = performance.now();
+
+        // Show connecting state immediately
+        document.getElementById('stateDisplay').classList.remove('hidden');
+        document.getElementById('stateDisplay').innerHTML = 'CONNECTING...';
+        document.getElementById('stateDisplay').classList.add('connecting');
+
+        // Hide menu initially
+        document.getElementById('mainMenu').style.display = 'none';
+
+        // Create connection and set up handlers immediately
+        ws = new WebSocket('ws://localhost:10000');
+
+        ws.onopen = () => {
+            debug('✅ Connected to server');
+            isConnected = true;
+            
+            // Hide connecting, show menu
+            document.getElementById('stateDisplay').classList.add('hidden');
+            document.getElementById('mainMenu').style.display = 'flex';
+            
+            ws.send(JSON.stringify({type: 'hello_menu'}));
+
+            document.getElementById('chatSend').addEventListener('click', sendChatMessage);
+            document.getElementById('chatInput').addEventListener('keypress', (e) => { 
+                if (e.key === 'Enter') sendChatMessage();
+            });
+        };
+
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                
+                // Always process these message types regardless of menu state
+                if (data.type === 'player_count') {
+                    updateOnlineCount(data.count);
+                }
+                if (data.type === 'leaderboard') {
+                    updateLeaderboardDisplay(data.leaderboard);
+                }
+                
+                // Route based on game state
+                if (isInGame) {
+                    handleWebSocketMessage(event);
+                } else {
+                    // In menu mode - handle menu messages including preview updates
+                    if (data.type === 'update' && data.is_menu_preview) {
+                        // Store game state for rendering preview
+                        enemies = data.enemies || [];
+                        players = data.players || {};
+                        enemy_bullets = data.enemy_bullets || []; 
+                        bullets = data.bullets || [];
+                        
+                        updateBulletInterpolation(data.bullets || []);
+                        updatePlayerInterpolation(data.players || {});
+                        updateEnemyInterpolation(data.enemies || []);
+                        updateEnemyBulletInterpolation(enemy_bullets);
+                        
+                        // Update menu camera to follow action
+                        if (Object.keys(players).length > 0) {
+                            let avgX = 0, avgY = 0, count = 0;
+                            for (let id in players) {
+                                avgX += players[id].x;
+                                avgY += players[id].y;
+                                count++;
+                            }
+                            if (count > 0) {
+                                menuCenterX = avgX / count;
+                                menuCenterY = avgY / count;
+                            }
+                        }
+                    } else if (data.type === 'init_menu') {
+                        myId = data.id;
+                        debug('✅ Got ID:', myId);
+                    }
+                }
+            } catch (e) {
+                debug('❌ Error:', e.message);
+            }
+        };
+        
+        ws.onclose = () => {
+            debug('❌ Disconnected');
+            isConnected = false;
+            isInGame = false;
+            
+            document.getElementById('stateDisplay').classList.remove('hidden', 'connecting', 'connected');
+            document.getElementById('stateDisplay').classList.add('disconnected');
+            document.getElementById('stateDisplay').innerHTML = 'DISCONNECTED';
+
+            document.getElementById('mainMenu').style.display = 'none';
+            document.body.classList.remove('game-active');
+        };
+        
+        ws.onerror = (error) => {
+            debug('❌ Connection error:', error);
+        };
 
         // Helper Functions
         function debug(...args) {
@@ -514,39 +1009,601 @@
         }
 
         function updatePlayerStats() {
-            if (myId && players[myId]) {
-                const player = players[myId];
-                const health = player.health !== undefined ? player.health : 100;
-                const score = player.score !== undefined ? player.score : 0;
-                const playerName = player.name || `Player ${myId}`;
-                
-                console.log('Updating stats - Health:', health, 'Score:', score);
-                
-                if (!isGhost && health < lastHealth) {
-                    document.getElementById('hpBarContainer').classList.add('hp-damage');
-                    setTimeout(() => {
-                        document.getElementById('hpBarContainer').classList.remove('hp-damage');
-                    }, 300);
-                }
-                lastHealth = health;
-                
-                if (isGhost) {
-                    document.getElementById('hpBarFill').style.background = '#88ccff';
-                    document.getElementById('hpBarFill').style.width = '100%';
-                    document.getElementById('hpText').innerHTML = '👻 GHOST MODE';
-                } else {
-                    const hpPercent = Math.max(0, Math.min(100, health));
-                    document.getElementById('hpBarFill').style.width = hpPercent + '%';
-                    document.getElementById('hpBarFill').style.background = '#0f0';
-                    document.getElementById('hpText').textContent = `${Math.round(health)}/100`;
-                }
-                
-                document.getElementById('Score').textContent = `Score: ${Math.round(score)}`;
-                document.getElementById('playerName').textContent = playerName;
+            if (!isInGame || !myId || !players[myId]) {
+                return;
+            }
+            
+            const player = players[myId];
+            const health = player.health !== undefined ? player.health : 100;
+            const score = player.score !== undefined ? player.score : 0;
+            const playerName = player.name || `Player ${myId}`;
+            
+            if (!isGhost && health < lastHealth) {
+                document.getElementById('hpBarContainer').classList.add('hp-damage');
+                setTimeout(() => {
+                    document.getElementById('hpBarContainer').classList.remove('hp-damage');
+                }, 300);
+            }
+            lastHealth = health;
+            
+            if (isGhost) {
+                document.getElementById('hpBarFill').style.background = '#88ccff';
+                document.getElementById('hpBarFill').style.width = '100%';
+                document.getElementById('hpText').innerHTML = '👻 GHOST MODE';
             } else {
-                console.log('updatePlayerStats: myId or players[myId] missing', {myId, hasPlayers: !!players[myId]});
+                const hpPercent = Math.max(0, Math.min(100, health));
+                document.getElementById('hpBarFill').style.width = hpPercent + '%';
+                document.getElementById('hpBarFill').style.background = '#0f0';
+                document.getElementById('hpText').textContent = `${Math.round(health)}/100`;
+            }
+            
+            document.getElementById('Score').textContent = `Score: ${Math.round(score)}`;
+            document.getElementById('playerName').textContent = playerName;
+        }
+
+        function updateStats(kills, wave, score) {
+            let stats = JSON.parse(localStorage.getItem('gameStats') || '{"waves":0,"kills":0,"highestScore":0,"playTime":0}');
+            stats.kills = (stats.kills || 0) + kills;
+            stats.waves = Math.max(stats.waves || 0, wave);
+            stats.highestScore = Math.max(stats.highestScore || 0, score);
+            localStorage.setItem('gameStats', JSON.stringify(stats));
+        }
+
+        function handleWebSocketMessage(event) {
+            try {
+                const data = JSON.parse(event.data);
+                const chatDiv = document.getElementById('chatMessages');
+
+                if (data.type === 'init') {
+                    myId = data.id;
+                    debug('✅ Got ID:', myId);
+                    
+                    document.getElementById('stateDisplay').classList.add('hidden');
+                    
+                    if (data.leaderboard) {
+                        updateLeaderboardDisplay(data.leaderboard);
+                    }
+                    
+                }
+
+                if (data.type === 'leaderboard') {
+                    updateLeaderboardDisplay(data.leaderboard);
+                }
+
+                if (data.type === 'update') {
+
+                    enemies = data.enemies || [];
+                    players = data.players || {};
+                    enemy_bullets = data.enemy_bullets || []; 
+                    
+                    bullets = data.bullets || [];
+
+                    updateBulletInterpolation(data.bullets || []);
+                    updatePlayerInterpolation(data.players || {});
+                    updateEnemyInterpolation(data.enemies || []);
+                    updateEnemyBulletInterpolation(enemy_bullets);
+
+                    if (isInGame) {
+                        updatePlayerStats();
+                    }
+                }       
+
+                if (data.type === 'player_count') {
+                    updateOnlineCount(data.count);
+                }
+                
+                if (data.type === 'game_over') {
+                    updateStats(data.kills, data.wave, data.score);
+                    document.body.classList.remove('game-active');
+                    isInGame = false;
+                    showMainMenu();
+                }
+                
+                if (data.type === 'respawn') {
+                    if (playerDeathAnimations[data.playerId]) {
+                        delete playerDeathAnimations[data.playerId];
+                    }
+                    
+                    if (data.playerId === myId) {
+                        document.getElementById('respawnScreen').style.display = 'none';
+                        myX = data.x;
+                        myY = data.y;
+                        isDead = false;
+                        isGhost = false;
+                        
+                        document.getElementById('hpBarFill').style.background = '#0f0';
+                        document.getElementById('hpText').innerHTML = `${players[myId]?.health || 100}/100`;
+                        
+                        justRespawned = true;
+                        setTimeout(() => {
+                            justRespawned = false;
+                        }, RESPAWN_PROTECTION_TIME);
+                        
+                        ws.send(JSON.stringify({
+                            type: 'ghost_mode',
+                            playerId: myId,
+                            ghost: false
+                        }));
+                    }
+                    
+                    if (players[data.playerId]) {
+                        players[data.playerId].x = data.x;
+                        players[data.playerId].y = data.y;
+                        players[data.playerId].health = data.health;
+                    }
+                    
+                    if (interpolatedPlayers[data.playerId]) {
+                        interpolatedPlayers[data.playerId].targetX = data.x;
+                        interpolatedPlayers[data.playerId].targetY = data.y;
+                        interpolatedPlayers[data.playerId].targetHealth = data.health;
+                        interpolatedPlayers[data.playerId].renderX = data.x;
+                        interpolatedPlayers[data.playerId].renderY = data.y;
+                    }
+                    
+                    if (data.playerId === myId) {
+                        updatePlayerStats();
+                    }
+                }
+                
+                if (data.type === 'death') {
+                    if (data.playerId === myId) {
+                        isDead = true;
+                        isGhost = true;
+                        
+                        isFiring = false;
+                        if (fireInterval) {
+                            clearInterval(fireInterval);
+                            fireInterval = null;
+                        }
+                        
+                        ws.send(JSON.stringify({
+                            type: 'ghost_mode',
+                            playerId: myId,
+                            ghost: true
+                        }));
+                        
+                        playerDeathAnimation = {
+                            startTime: performance.now(),
+                            duration: PLAYER_DEATH_DURATION,
+                            x: myX,
+                            y: myY,
+                            size: 20
+                        };
+                        
+                        document.getElementById('hpBarFill').style.background = '#88ccff';
+                        document.getElementById('hpBarFill').style.width = '100%';
+                        document.getElementById('hpText').innerHTML = '👻 GHOST MODE';
+                    } else {
+                        console.log(`Player ${data.playerId} died, starting animation`);
+
+                        const deathX = data.x;
+                        const deathY = data.y;
+                        
+                        if (!interpolatedPlayers[data.playerId]) {
+                            interpolatedPlayers[data.playerId] = {
+                                renderX: deathX,
+                                renderY: deathY,
+                                x: deathX,
+                                y: deathY,
+                                isDying: true,
+                                deathX: deathX,
+                                deathY: deathY,
+                                ghost: false,
+                                dead: true
+                            };
+                        } else {
+                            interpolatedPlayers[data.playerId].isDying = true;
+                            interpolatedPlayers[data.playerId].deathX = deathX;
+                            interpolatedPlayers[data.playerId].deathY = deathY;
+                        }
+                        
+                        playerDeathAnimations[data.playerId] = {
+                            startTime: performance.now(),
+                            duration: PLAYER_DEATH_DURATION,
+                            x: deathX,
+                            y: deathY,
+                            size: 20,
+                            playerId: data.playerId
+                        };
+                    }
+                }
+
+                if (data.type === 'position_correction') {
+                    myX = data.x;
+                    myY = data.y;
+                    if (players[myId]) {
+                        players[myId].x = data.x;
+                        players[myId].y = data.y;
+                    }
+                }
+
+                // Player count updates
+                const currentCount = Object.keys(players).length;
+                if (currentCount !== lastPlayerCount) {
+                    if (currentCount > lastPlayerCount) {
+                        debug(`➕ Player joined! Total: ${currentCount}`);
+                        chatMessages.unshift(`<span style="color: #4CAF50;">🏷️ Player joined! Total: ${currentCount}</span>`);
+                    } else {
+                        debug(`➖ Player left. Total: ${currentCount}`);
+                        chatMessages.unshift(`<span style="color: #ff4444;">👋 Player left. Total: ${currentCount}</span>`);
+                    }
+                    if (chatMessages.length > MAX_CHAT_MESSAGES) chatMessages.pop();
+                    chatDiv.innerHTML = chatMessages.map(msg => `<div style="margin:2px 0;">${msg}</div>`).join('');
+                    lastPlayerCount = currentCount;
+                }
+
+                if (data.type === 'chat') {
+                    const message = `[Player${data.playerId}]: ${data.message}`;
+                    chatMessages.unshift(message);
+                    if (chatMessages.length > MAX_CHAT_MESSAGES) chatMessages.pop();
+                    if (chatDiv) {
+                        chatDiv.innerHTML = chatMessages.map(msg => `<div style="margin:2px 0;">${msg}</div>`).join('');
+                    }
+                }
+
+                if (data.type === 'wave_start') {
+                    waveNumber = data.wave;
+                    document.getElementById('waveDisplay').innerHTML = `WAVE ${waveNumber}`;
+                    document.getElementById('waveDisplay').style.color = '#ffaa00';
+                    updatePlayerStats();
+                }
+
+                if (data.type === 'wave_end') {
+                    document.getElementById('waveDisplay').innerHTML = `✅ WAVE ${data.wave} COMPLETE! +${data.bonus}`;
+                    document.getElementById('waveDisplay').style.color = '#4CAF50';
+                    
+                    if (isGhost) {
+                        ws.send(JSON.stringify({
+                            type: 'ghost_mode',
+                            playerId: myId,
+                            ghost: false
+                        }));
+                        ws.send(JSON.stringify({
+                            type: 'request_respawn',
+                            playerId: myId
+                        }));
+                        isGhost = false;
+                    }
+                    
+                    updatePlayerStats();
+                }
+
+                if (data.type === 'boss_spawn') {
+                    document.getElementById('waveDisplay').innerHTML = `👑 BOSS WAVE ${data.wave}! 👑`;
+                    document.getElementById('waveDisplay').style.color = '#FFD700';
+                }
+
+                if (data.type === 'ghost_mode_update') {
+                    if (data.playerId === myId) {
+                        isGhost = data.ghost;
+                    }
+                    if (interpolatedPlayers[data.playerId]) {
+                        interpolatedPlayers[data.playerId].ghost = data.ghost;
+                    }
+                }
+
+                document.getElementById('enemyCount').innerHTML = `Enemies: ${enemies.length}`;
+
+            } catch (e) {
+                debug('❌ Error:', e.message);
             }
         }
+
+        function handleMenuMessages(event) {
+            try {
+                const data = JSON.parse(event.data);
+                
+                if (data.type === 'init_menu') {
+                    myId = data.id; 
+                    debug('✅ Got ID:', myId);
+                }
+                
+                if (data.type === 'player_count') {
+                    updateOnlineCount(data.count);
+                }
+                
+                if (data.type === 'leaderboard') {
+                    updateLeaderboardDisplay(data.leaderboard);
+                }
+                
+                if (data.type === 'update' && data.is_menu_preview) {
+                    enemies = data.enemies || [];
+                    players = data.players || {};
+                    enemy_bullets = data.enemy_bullets || []; 
+                    bullets = data.bullets || [];
+                    
+                    updateBulletInterpolation(data.bullets || []);
+                    updatePlayerInterpolation(data.players || {});
+                    updateEnemyInterpolation(data.enemies || []);
+                    updateEnemyBulletInterpolation(enemy_bullets);
+                    
+                    if (Object.keys(players).length > 0) {
+                        let avgX = 0, avgY = 0, count = 0;
+                        for (let id in players) {
+                            avgX += players[id].x;
+                            avgY += players[id].y;
+                            count++;
+                        }
+                        if (count > 0) {
+                            menuCenterX = avgX / count;
+                            menuCenterY = avgY / count;
+                        }
+                    }
+                }
+                
+            } catch (e) {
+                debug('❌ Error:', e.message);
+            }
+        }
+
+        // Menu Functions
+        function startGame() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.onmessage = handleWebSocketMessage;
+                
+                ws.send(JSON.stringify({
+                    type: 'spawn_player',
+                    name: currentPlayerName
+                }));
+                
+                isInGame = true;
+            } else {
+                document.getElementById('stateDisplay').classList.remove('hidden');
+                document.getElementById('stateDisplay').innerHTML = 'CONNECTING...';
+                document.getElementById('stateDisplay').classList.add('connecting');
+                
+                ws = new WebSocket('ws://localhost:10000');
+                ws.onopen = () => {
+                    debug('✅ Reconnected to server');
+                    isConnected = true;
+                    document.getElementById('stateDisplay').classList.add('hidden');
+                    startGame();
+                };
+            }
+            
+            document.getElementById('mainMenu').style.display = 'none';
+            document.body.classList.add('game-active');
+            canvas.focus();
+        }
+
+        function showMainMenu() {
+            document.getElementById('mainMenu').style.display = 'flex';
+            document.body.classList.remove('game-active');
+            isInGame = false;
+            
+            if (ws) {
+                ws.onmessage = handleMenuMessages;
+            }
+        }
+
+        function setPlayerName() {
+            const input = document.getElementById('playerNameInput');
+            currentPlayerName = input.value.trim() || "Player";
+            input.value = currentPlayerName;
+            
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    type: 'set_name',
+                    name: currentPlayerName
+                }));
+            }
+            
+            debug(`Name set to: ${currentPlayerName}`);
+        }
+
+        function updateOnlineCount(count) {
+            document.getElementById('onlinePlayers').textContent = count;
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('mainMenu').style.display !== 'flex') {
+                showMainMenu();
+            }
+        });
+
+        document.getElementById('playerNameInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                setPlayerName();
+            }
+        });
+
+        function initMobileControls() {
+    if (!isMobile) return;
+    
+    document.getElementById('mobileControls').style.display = 'block';
+    
+    // D-Pad buttons
+    const dpadUp = document.getElementById('dpadUp');
+    const dpadDown = document.getElementById('dpadDown');
+    const dpadLeft = document.getElementById('dpadLeft');
+    const dpadRight = document.getElementById('dpadRight');
+    
+    // Touch start handlers
+    dpadUp.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        mobileMovement.up = true;
+        dpadUp.classList.add('active');
+    });
+    dpadUp.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        mobileMovement.up = false;
+        dpadUp.classList.remove('active');
+    });
+    
+    dpadDown.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        mobileMovement.down = true;
+        dpadDown.classList.add('active');
+    });
+    dpadDown.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        mobileMovement.down = false;
+        dpadDown.classList.remove('active');
+    });
+    
+    dpadLeft.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        mobileMovement.left = true;
+        dpadLeft.classList.add('active');
+    });
+    dpadLeft.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        mobileMovement.left = false;
+        dpadLeft.classList.remove('active');
+    });
+    
+    dpadRight.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        mobileMovement.right = true;
+        dpadRight.classList.add('active');
+    });
+    dpadRight.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        mobileMovement.right = false;
+        dpadRight.classList.remove('active');
+    });
+    
+    // Aim joystick
+    const aimStick = document.getElementById('aimJoystick');
+    const aimHandle = document.getElementById('aimHandle');
+    
+    aimStick.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        aimJoystick.active = true;
+        updateAimJoystick(e.touches[0]);
+    });
+    
+    aimStick.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (aimJoystick.active) {
+            updateAimJoystick(e.touches[0]);
+        }
+    });
+    
+    aimStick.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        aimJoystick.active = false;
+        aimJoystick.force = 0;
+        aimHandle.style.transform = 'translate(-50%, -50%)';
+    });
+    
+    // Shoot button
+    const shootBtn = document.getElementById('mobileShootBtn');
+    shootBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (!isGhost) {
+            isFiring = true;
+            startFiring();
+        }
+    });
+    shootBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        isFiring = false;
+        if (fireInterval) {
+            clearInterval(fireInterval);
+            fireInterval = null;
+        }
+    });
+}
+
+        function updateAimJoystick(touch) {
+            const aimStick = document.getElementById('aimJoystick');
+            const aimHandle = document.getElementById('aimHandle');
+            const rect = aimStick.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            let dx = touch.clientX - centerX;
+            let dy = touch.clientY - centerY;
+            const distance = Math.hypot(dx, dy);
+            const maxDistance = rect.width / 2;
+            
+            if (distance > maxDistance) {
+                dx = (dx / distance) * maxDistance;
+                dy = (dy / distance) * maxDistance;
+            }
+            
+            aimJoystick.force = Math.min(distance / maxDistance, 1);
+            aimJoystick.angle = Math.atan2(dy, dx);
+            
+            aimHandle.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+        }
+
+        function handleMobileMovement() {
+            if (!isMobile) return;
+            
+            const moveAmount = SPEED * (deltaTime || 0.016);
+            
+            if (mobileMovement.up) myY -= moveAmount;
+            if (mobileMovement.down) myY += moveAmount;
+            if (mobileMovement.left) myX -= moveAmount;
+            if (mobileMovement.right) myX += moveAmount;
+
+            if (aimJoystick.active && aimJoystick.force > 0.1) {
+                playerAngle = aimJoystick.angle;
+                
+                if (!isFiring && !isGhost) {
+                    isFiring = true;
+                    startFiring();
+                }
+            } else {
+                if (isFiring && !isGhost) {
+                    isFiring = false;
+                    if (fireInterval) {
+                        clearInterval(fireInterval);
+                        fireInterval = null;
+                    }
+                }
+            }
+        }
+
+        function startFiring() {
+            if (fireInterval) clearInterval(fireInterval);
+            
+            fireInterval = setInterval(() => {
+                if (isFiring && myId && isConnected && !isGhost) {
+                    const now = Date.now();
+                    if (now - lastShotTime >= SHOT_COOLDOWN) {
+                        lastShotTime = now;
+                        
+                        let worldX, worldY;
+                        
+                        if (isMobile && aimJoystick.active) {
+                            worldX = myX + Math.cos(aimJoystick.angle) * 100;
+                            worldY = myY + Math.sin(aimJoystick.angle) * 100;
+                        } else {
+                            const rect = canvas.getBoundingClientRect();
+                            worldX = lastMouseX - rect.left + cameraX;
+                            worldY = lastMouseY - rect.top + cameraY;
+                        }
+                        
+                        const dx = worldX - myX;
+                        const dy = worldY - myY;
+                        const distance = Math.hypot(dx, dy);
+                        
+                        if (distance >= 10) {
+                            const bullet = {
+                                id: Math.random().toString(36).substr(2, 9),
+                                x: myX,
+                                y: myY,
+                                vx: (dx / distance) * BULLET_SPEED,
+                                vy: (dy / distance) * BULLET_SPEED,
+                                owner: myId,
+                                damage: DAMAGE,
+                                createdAt: Date.now(),
+                                size: BULLET_SIZE,
+                                color: '#ffff00'
+                            };
+                            
+                            ws.send(JSON.stringify({type: 'shoot', bullet}));
+                        }
+                    }
+                }
+            }, 16);
+        }
+
+        initMobileControls();
 
         function sendChatMessage() {
             const input = document.getElementById('chatInput');
@@ -598,15 +1655,13 @@
             ctx.translate(x, y);
             ctx.rotate(angle + 1.57);
             
-            const scale = size / 20; // scaling factor
+            const scale = size / 20;
             
-            // Body
             ctx.fillStyle = color;
             ctx.beginPath();
             ctx.arc(0, 0, size, 0, Math.PI * 2);
             ctx.fill();
             
-            // Ears
             ctx.fillStyle = color;
             ctx.beginPath();
             ctx.arc(-12 * scale, -8 * scale, 8 * scale, 0, Math.PI * 2);
@@ -615,7 +1670,6 @@
             ctx.arc(12 * scale, -8 * scale, 8 * scale, 0, Math.PI * 2);
             ctx.fill();
             
-            // Eye whites
             ctx.fillStyle = '#ffffff';
             ctx.beginPath();
             ctx.arc(-5 * scale, -5 * scale, 4 * scale, 0, Math.PI * 2);
@@ -624,7 +1678,6 @@
             ctx.arc(5 * scale, -5 * scale, 4 * scale, 0, Math.PI * 2);
             ctx.fill();
             
-            // Pupils
             const dx = mouseX - x;
             const dy = mouseY - y;
             
@@ -827,6 +1880,49 @@
             }
         }
 
+        function updateBulletInterpolation(newBullets) {
+            const now = performance.now();
+            
+            for (let newBullet of newBullets) {
+                let existingBullet = interpolatedBullets.find(b => b.id === newBullet.id);
+                
+                if (existingBullet) {
+                    existingBullet.targetX = newBullet.x;
+                    existingBullet.targetY = newBullet.y;
+                    existingBullet.color = newBullet.color;
+                    existingBullet.size = newBullet.size;
+                    if (!existingBullet.createdAt) {
+                        existingBullet.createdAt = now;
+                    }
+                } else {
+                    interpolatedBullets.push({
+                        ...newBullet,
+                        renderX: newBullet.x,
+                        renderY: newBullet.y,
+                        targetX: newBullet.x,
+                        targetY: newBullet.y,
+                        createdAt: now,
+                        maxLifetime: 3000
+                    });
+                }
+            }
+
+            interpolatedBullets = interpolatedBullets.filter(b => 
+                newBullets.some(nb => nb.id === b.id)
+            );
+        }
+
+        function interpolateBullets() {
+            const factor = 0.3;
+            
+            for (let bullet of interpolatedBullets) {
+                if (bullet.targetX !== undefined) {
+                    bullet.renderX += (bullet.targetX - bullet.renderX) * factor;
+                    bullet.renderY += (bullet.targetY - bullet.renderY) * factor;
+                }
+            }
+        }
+
         window.requestRespawn = function() {
             if (!isDead || !isConnected) return;
             
@@ -837,284 +1933,11 @@
             }));
         }
 
-        // WebSocket Events
-        ws.onopen = () => {
-            debug('✅ Connected');
-            document.getElementById('stateDisplay').innerHTML = '✅ Connected';
-            document.getElementById('stateDisplay').classList.remove('connecting', 'disconnected');
-            document.getElementById('stateDisplay').classList.add('connected');
-            setTimeout(() => {
-                document.getElementById('stateDisplay').classList.add('hidden');
-            }, 1000);
-            ws.send(JSON.stringify({type: 'hello'}));
-            isConnected = true;
-
-            document.getElementById('chatSend').addEventListener('click', sendChatMessage);
-            document.getElementById('chatInput').addEventListener('keypress', (e) => { 
-                if (e.key === 'Enter') sendChatMessage();
-            });
-        };
-
-        ws.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                const chatDiv = document.getElementById('chatMessages');
-
-                if (data.type === 'init') {
-                    myId = data.id;
-                    debug('✅ Got ID:', myId);
-                    
-                    if (!players[myId]) {
-                        players[myId] = { health: 100, score: 0, name: `Player ${myId}` };
-                    }
-
-                    if (data.x !== undefined && data.y !== undefined) {
-                        myX = data.x;
-                        myY = data.y;
-                        players[myId].x = data.x;
-                        players[myId].y = data.y;
-                    }
-                    
-                    if (data.leaderboard) {
-                        updateLeaderboardDisplay(data.leaderboard);
-                    }
-                    
-                    updatePlayerStats();
-                }
-
-                if (data.type === 'leaderboard') {
-                    updateLeaderboardDisplay(data.leaderboard);
-                }
-
-                if (data.type === 'update') {
-                    enemies = data.enemies || [];
-                    players = data.players || {};
-                    enemy_bullets = data.enemy_bullets || []; 
-                    updatePlayerInterpolation(data.players || {});
-                    updateEnemyInterpolation(data.enemies || []);
-                    updateEnemyBulletInterpolation(enemy_bullets);
-
-                    updatePlayerStats();
-
-                    const serverBullets = data.bullets || [];
-                    const now = Date.now();
-                    
-                    bullets = bullets.filter(local => {
-                        if (serverBullets.some(s => s.id === local.id)) return true;
-                        
-                        const bulletAge = now - (local.createdAt || now);
-                        if (bulletAge < 100) return true;
-                        
-                        return false;
-                    });
-                    
-                    for (let sb of serverBullets) {
-                        if (!bullets.find(l => l.id === sb.id)) {
-                            bullets.push(sb);
-                        }
-                    }
-                }
-
-                if (data.type === 'respawn') {
-                    if (playerDeathAnimations[data.playerId]) {
-                        delete playerDeathAnimations[data.playerId];
-                    }
-                    
-                    if (data.playerId === myId) {
-                        document.getElementById('respawnScreen').style.display = 'none';
-                        myX = data.x;
-                        myY = data.y;
-                        isDead = false;
-                        isGhost = false;
-                        
-                        document.getElementById('hpBarFill').style.background = '#0f0';
-                        document.getElementById('hpText').innerHTML = `${players[myId]?.health || 100}/100`;
-                        
-                        justRespawned = true;
-                        setTimeout(() => {
-                            justRespawned = false;
-                        }, RESPAWN_PROTECTION_TIME);
-                        
-                        ws.send(JSON.stringify({
-                            type: 'ghost_mode',
-                            playerId: myId,
-                            ghost: false
-                        }));
-                    }
-                    
-                    if (players[data.playerId]) {
-                        players[data.playerId].x = data.x;
-                        players[data.playerId].y = data.y;
-                        players[data.playerId].health = data.health;
-                    }
-                    
-                    if (interpolatedPlayers[data.playerId]) {
-                        interpolatedPlayers[data.playerId].targetX = data.x;
-                        interpolatedPlayers[data.playerId].targetY = data.y;
-                        interpolatedPlayers[data.playerId].targetHealth = data.health;
-                        interpolatedPlayers[data.playerId].renderX = data.x;
-                        interpolatedPlayers[data.playerId].renderY = data.y;
-                    }
-                    
-                    if (data.playerId === myId) {
-                        updatePlayerStats();
-                    }
-                }
-                
-                if (data.type === 'death') {
-                    if (data.playerId === myId) {
-                        isDead = true;
-                        isGhost = true;
-                        
-                        isFiring = false;
-                        if (fireInterval) {
-                            clearInterval(fireInterval);
-                            fireInterval = null;
-                        }
-                        
-                        ws.send(JSON.stringify({
-                            type: 'ghost_mode',
-                            playerId: myId,
-                            ghost: true
-                        }));
-                        
-                        playerDeathAnimation = {
-                            startTime: performance.now(),
-                            duration: PLAYER_DEATH_DURATION,
-                            x: myX,
-                            y: myY,
-                            size: 20
-                        };
-                        
-                        document.getElementById('hpBarFill').style.background = '#88ccff';
-                        document.getElementById('hpBarFill').style.width = '100%';
-                        document.getElementById('hpText').innerHTML = '👻 GHOST MODE';
-               }else {
-                    console.log(`Player ${data.playerId} died, starting animation`);
-
-                    const deathX = data.x;
-                    const deathY = data.y;
-                    
-                    if (!interpolatedPlayers[data.playerId]) {
-                        interpolatedPlayers[data.playerId] = {
-                            renderX: deathX,
-                            renderY: deathY,
-                            x: deathX,
-                            y: deathY,
-                            isDying: true,
-                            deathX: deathX,
-                            deathY: deathY,
-                            ghost: false,
-                            dead: true
-                        };
-                    } else {
-                        interpolatedPlayers[data.playerId].isDying = true;
-                        interpolatedPlayers[data.playerId].deathX = deathX;
-                        interpolatedPlayers[data.playerId].deathY = deathY;
-                    }
-                    
-                    playerDeathAnimations[data.playerId] = {
-                        startTime: performance.now(),
-                        duration: PLAYER_DEATH_DURATION,
-                        x: deathX,
-                        y: deathY,
-                        size: 20,
-                        playerId: data.playerId
-                    };
-                }
-            }
-
-                if (data.type === 'position_correction') {
-                    myX = data.x;
-                    myY = data.y;
-                    if (players[myId]) {
-                        players[myId].x = data.x;
-                        players[myId].y = data.y;
-                    }
-                }
-
-                // Player count updates
-                const currentCount = Object.keys(players).length;
-                if (currentCount !== lastPlayerCount) {
-                    if (currentCount > lastPlayerCount) {
-                        debug(`➕ Player joined! Total: ${currentCount}`);
-                        chatMessages.unshift(`<span style="color: #4CAF50;">🏷️ Player joined! Total: ${currentCount}</span>`);
-                    } else {
-                        debug(`➖ Player left. Total: ${currentCount}`);
-                        chatMessages.unshift(`<span style="color: #ff4444;">👋 Player left. Total: ${currentCount}</span>`);
-                    }
-                    if (chatMessages.length > MAX_CHAT_MESSAGES) chatMessages.pop();
-                    chatDiv.innerHTML = chatMessages.map(msg => `<div style="margin:2px 0;">${msg}</div>`).join('');
-                    lastPlayerCount = currentCount;
-                }
-
-                if (data.type === 'chat') {
-                    const message = `[Player${data.playerId}]: ${data.message}`;
-                    chatMessages.unshift(message);
-                    if (chatMessages.length > MAX_CHAT_MESSAGES) chatMessages.pop();
-                    if (chatDiv) {
-                        chatDiv.innerHTML = chatMessages.map(msg => `<div style="margin:2px 0;">${msg}</div>`).join('');
-                    }
-                }
-
-                if (data.type === 'wave_start') {
-                    waveNumber = data.wave;
-                    document.getElementById('waveDisplay').innerHTML = `WAVE ${waveNumber}`;
-                    document.getElementById('waveDisplay').style.color = '#ffaa00';
-                    updatePlayerStats();
-                }
-
-                if (data.type === 'wave_end') {
-                    document.getElementById('waveDisplay').innerHTML = `✅ WAVE ${data.wave} COMPLETE! +${data.bonus}`;
-                    document.getElementById('waveDisplay').style.color = '#4CAF50';
-                    
-                    if (isGhost) {
-                        ws.send(JSON.stringify({
-                            type: 'ghost_mode',
-                            playerId: myId,
-                            ghost: false
-                        }));
-                        ws.send(JSON.stringify({
-                            type: 'request_respawn',
-                            playerId: myId
-                        }));
-                        isGhost = false;
-                    }
-                    
-                    updatePlayerStats();
-                }
-
-                if (data.type === 'boss_spawn') {
-                    document.getElementById('waveDisplay').innerHTML = `👑 BOSS WAVE ${data.wave}! 👑`;
-                    document.getElementById('waveDisplay').style.color = '#FFD700';
-                }
-
-                if (data.type === 'ghost_mode_update') {
-                    if (data.playerId === myId) {
-                        isGhost = data.ghost;
-                    }
-                    if (interpolatedPlayers[data.playerId]) {
-                        interpolatedPlayers[data.playerId].ghost = data.ghost;
-                    }
-                }
-
-                document.getElementById('enemyCount').innerHTML = `Enemies: ${enemies.length}`;
-
-            } catch (e) {
-                debug('❌ Error:', e.message);
-            }
-        };
-        
-        ws.onclose = () => {
-            debug('❌ Disconnected');
-            document.getElementById('stateDisplay').innerHTML = '❌ Disconnected';
-            document.getElementById('stateDisplay').classList.remove('connected', 'hidden');
-            document.getElementById('stateDisplay').classList.add('disconnected');
-            isConnected = false;
-        };
-
         // Input Events
         document.addEventListener('keydown', (e) => {
+            const isTyping = document.activeElement === document.getElementById('playerNameInput') ||
+                            document.activeElement === document.getElementById('chatInput');
+            
             if (e.key === 'Escape') {
                 const chatContainer = document.getElementById('chatContainer');
                 if (!chatContainer.classList.contains('collapsed')) {
@@ -1123,8 +1946,7 @@
                 }
             }
             
-            if (document.activeElement === document.getElementById('chatInput')) {
-                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') e.preventDefault();
+            if (isTyping) {
                 return;
             }
             
@@ -1162,7 +1984,11 @@
         });
 
         document.addEventListener('keyup', (e) => {
-            if (document.activeElement === document.getElementById('chatInput')) return;
+            const isTyping = document.activeElement === document.getElementById('playerNameInput') ||
+                            document.activeElement === document.getElementById('chatInput');
+            
+            if (isTyping) return;
+            
             keys[e.key] = false;
         });
 
@@ -1211,10 +2037,11 @@
                                 vy: (dy / distance) * BULLET_SPEED,
                                 owner: myId,
                                 damage: DAMAGE,
-                                createdAt: Date.now()
+                                createdAt: Date.now(),
+                                size: BULLET_SIZE,
+                                color: '#ffff00'
                             };
 
-                            bullets.push(bullet);
                             ws.send(JSON.stringify({type: 'shoot', bullet}));
                         }
                     }
@@ -1240,6 +2067,14 @@
 
         // Game Loop
         function gameLoop() {
+
+            if (cameraX === 0 && cameraY === 0 && myId) {
+                cameraX = myX - canvas.width / 2;
+                cameraY = myY - canvas.height / 2;
+                targetCameraX = cameraX;
+                targetCameraY = cameraY;
+            }
+
             if (!window.eyeTargets) window.eyeTargets = {};
             
             const nowPerf = performance.now();
@@ -1263,22 +2098,49 @@
                 }
             }
 
-            // Movement
-            if (myId) {
+            const mainMenuVisible = document.getElementById('mainMenu').style.display !== 'none';
+    
+            if (mainMenuVisible) {
+                menuCameraAngle += MENU_CAMERA_SPEED * deltaTime;
+                
+                targetCameraX = menuCenterX + Math.cos(menuCameraAngle) * MENU_CAMERA_RADIUS - canvas.width / 2;
+                targetCameraY = menuCenterY + Math.sin(menuCameraAngle * 0.7) * MENU_CAMERA_RADIUS - canvas.height / 2;
+                
+                targetCameraY += Math.sin(menuCameraAngle * 1.3) * 50;
+                
+                targetCameraX = Math.max(0, Math.min(WORLD_WIDTH - canvas.width, targetCameraX));
+                targetCameraY = Math.max(0, Math.min(WORLD_HEIGHT - canvas.height, targetCameraY));
+                
+                if (!myId) {
+                    myX = 1000;
+                    myY = 1000;
+                }
+            } else {
+                if (myId) {
+                    targetCameraX = myX - canvas.width / 2;
+                    targetCameraY = myY - canvas.height / 2;
+                }
+            }
+
+            cameraX += (targetCameraX - cameraX) * CAMERA_SMOOTH;
+            cameraY += (targetCameraY - cameraY) * CAMERA_SMOOTH;
+
+            if (myId && !mainMenuVisible) {
                 const moveAmount = SPEED * deltaTime;
+                
                 if (keys['w'] || keys['ArrowUp'] || keys['W']) myY -= moveAmount;
                 if (keys['s'] || keys['ArrowDown'] || keys['S']) myY += moveAmount;
                 if (keys['a'] || keys['ArrowLeft'] || keys['A']) myX -= moveAmount;
                 if (keys['d'] || keys['ArrowRight'] || keys['D']) myX += moveAmount;
-
+                
+                if (isMobile) {
+                    handleMobileMovement();
+                }
+                
                 myX = Math.max(20, Math.min(WORLD_WIDTH - 20, myX));
                 myY = Math.max(20, Math.min(WORLD_HEIGHT - 20, myY));
-
-                targetCameraX = myX - canvas.width / 2;
-                targetCameraY = myY - canvas.height / 2;
             }
 
-            // Send position to server
             if (isConnected) {
                 const timeToSend = now - lastUpdateTime > UPDATE_RATE;
                 const positionChanged = Math.abs(myX - lastSentX) > 1 || Math.abs(myY - lastSentY) > 1;
@@ -1299,31 +2161,17 @@
                 }
             }
 
-            // Update bullets
-            bullets.forEach(b => {
-                b.x += b.vx * deltaTime;
-                b.y += b.vy * deltaTime;
-            });
-            bullets = bullets.filter(b => 
-                b.x >= 0 && b.x <= WORLD_WIDTH && 
-                b.y >= 0 && b.y <= WORLD_HEIGHT && 
-                Date.now() - b.createdAt <= 10000
-            );
-
-            // Update camera
             cameraX += (targetCameraX - cameraX) * CAMERA_SMOOTH;
             cameraY += (targetCameraY - cameraY) * CAMERA_SMOOTH;
 
-            // Interpolate
             interpolateEnemies();
             interpolatePlayers();
             interpolateEnemyBullets();
-
-            // Drawing
+            interpolateBullets();
+            
             ctx.save();
             ctx.translate(-cameraX, -cameraY);
 
-            // World border void
             ctx.fillStyle = VOID_COLOR;
             const visibleLeft = cameraX;
             const visibleTop = cameraY;
@@ -1335,7 +2183,6 @@
             if (visibleTop < 0) ctx.fillRect(Math.max(0, visibleLeft), visibleTop, Math.min(WORLD_WIDTH, visibleRight) - Math.max(0, visibleLeft), -visibleTop);
             if (visibleBottom > WORLD_HEIGHT) ctx.fillRect(Math.max(0, visibleLeft), WORLD_HEIGHT, Math.min(WORLD_WIDTH, visibleRight) - Math.max(0, visibleLeft), visibleBottom - WORLD_HEIGHT);
 
-            // Grid
             ctx.strokeStyle = GRID_COLOR;
             ctx.lineWidth = 1;
             const startX = Math.floor(Math.max(0, cameraX) / 50) * 50;
@@ -1357,7 +2204,6 @@
                 ctx.stroke();
             }
             
-            // Draw enemies
             for (let enemy of interpolatedEnemies) {
                 let drawX = enemy.renderX;
                 let drawY = enemy.renderY;
@@ -1395,7 +2241,6 @@
                 }
             }
             
-            // Local player eye tracking
             const localEyeId = 'local';
             if (!window.eyeTargets[localEyeId]) {
                 window.eyeTargets[localEyeId] = { x: mouseWorldX, y: mouseWorldY, targetX: mouseWorldX, targetY: mouseWorldY };
@@ -1437,7 +2282,6 @@
             const localEyeX = window.eyeTargets[localEyeId].x;
             const localEyeY = window.eyeTargets[localEyeId].y;
 
-            // Draw other players
             for (let id in interpolatedPlayers) {
                 const p = interpolatedPlayers[id];
                 const eyeId = `player_${id}`;
@@ -1448,7 +2292,6 @@
                     window.eyeTargets[eyeId] = { x: p.renderX, y: p.renderY, targetX: p.renderX, targetY: p.renderY };
                 }
 
-                // Eye targeting logic
                 let lookX = p.renderX + Math.cos(p.renderAngle) * 100;
                 let lookY = p.renderY + Math.sin(p.renderAngle) * 100;
                 let closestDist = Infinity;
@@ -1493,13 +2336,10 @@
                 window.eyeTargets[eyeId].x += (window.eyeTargets[eyeId].targetX - window.eyeTargets[eyeId].x) * 0.1;
                 window.eyeTargets[eyeId].y += (window.eyeTargets[eyeId].targetY - window.eyeTargets[eyeId].y) * 0.1;
 
-                // Death animation
                 let drawX = p.renderX;
                 let drawY = p.renderY;
                 let drawSize = 20;
-                let opacity = 1;
                 let playerColor = isOtherGhost ? '#88ccff' : '#ff4444';
-                let isDying = false;
 
                 if (deathAnim) {
                     const now = performance.now();
@@ -1520,8 +2360,6 @@
                                 window.eyeTargets[eyeId].x, window.eyeTargets[eyeId].y, 20);
                         ctx.globalAlpha = 1;
                         
-                        console.log(`Animating death for player ${id}: progress ${progress.toFixed(2)}`);
-                        
                         continue;
                     } else {
                         delete playerDeathAnimations[id];
@@ -1530,7 +2368,6 @@
                             interpolatedPlayers[id].isDying = false;
                         }
                         deathAnim = null;
-                        let isOtherGhost = true;
                         playerColor = '#88ccff';
                     }
                 }
@@ -1543,14 +2380,12 @@
                             window.eyeTargets[eyeId].x, window.eyeTargets[eyeId].y, drawSize);
                     ctx.globalAlpha = 1;
 
-                    // Name tag
                     ctx.fillStyle = isOtherGhost ? '#88ccff' : '#fff';
                     ctx.font = '12px Arial';
                     const playerName = players[id]?.name || (isOtherGhost ? `Player ${id}` : `P${id}`);
                     const nameWidth = ctx.measureText(playerName).width;
                     ctx.fillText(playerName, drawX - nameWidth/2, drawY - 40);
                     
-                    // Health bar (only for alive non-ghosts)
                     if (!isOtherGhost && p.health > 0) {
                         ctx.fillStyle = '#ff0000';
                         ctx.fillRect(drawX - 20, drawY + 30, 40, 5);
@@ -1560,7 +2395,6 @@
                 }
             }
 
-            // Draw own death animation
             if (playerDeathAnimation) {
                 const now = performance.now();
                 const progress = (now - playerDeathAnimation.startTime) / playerDeathAnimation.duration;
@@ -1570,7 +2404,7 @@
                     const opacity = 1 - progress;
                     
                     ctx.globalAlpha = opacity;
-                    ctx.fillStyle = '#00ff00';
+                    ctx.fillStyle = '#ff4444';
                     ctx.beginPath();
                     ctx.arc(playerDeathAnimation.x, playerDeathAnimation.y, drawSize, 0, Math.PI * 2);
                     ctx.fill();
@@ -1578,8 +2412,9 @@
                 }
             }
             
-            // Draw yourself
             if (myId && players[myId] && (!isDead || playerDeathAnimation)) {
+                const playerName = players[myId].name || currentPlayerName || `Player ${myId}`;
+                
                 if (isGhost) {
                     ctx.globalAlpha = GHOST_ALPHA;
                     drawPlayer(myX, myY, '#88ccff', true, playerAngle, localEyeX, localEyeY);
@@ -1587,11 +2422,10 @@
                     
                     ctx.fillStyle = '#88ccff';
                     ctx.font = '12px Arial';
-                    const youText = 'You';
-                    const youWidth = ctx.measureText(youText).width;
-                    ctx.fillText(youText, myX - youWidth/2, myY - 40);
+                    const nameWidth = ctx.measureText(playerName).width;
+                    ctx.fillText(playerName, myX - nameWidth/2, myY - 40);
                 } else {
-                    drawPlayer(myX, myY, '#00ff00', true, playerAngle, localEyeX, localEyeY);
+                    drawPlayer(myX, myY, '#ff4444', true, playerAngle, localEyeX, localEyeY);
                     
                     const health = players[myId].health || 100;
                     ctx.fillStyle = '#ff0000';
@@ -1601,21 +2435,20 @@
                     
                     ctx.fillStyle = '#fff';
                     ctx.font = '12px Arial';
-                    const youText = 'You';
-                    const youWidth = ctx.measureText(youText).width;
-                    ctx.fillText(youText, myX - youWidth / 2, myY - 40);
+                    const nameWidth = ctx.measureText(playerName).width;
+                    ctx.fillText(playerName, myX - nameWidth / 2, myY - 40);
                 }
             }
-            
-            // Draw bullets
+
             ctx.fillStyle = '#ffff00';
-            for (let b of bullets) {
-                ctx.beginPath();
-                ctx.arc(b.x, b.y, BULLET_SIZE, 0, Math.PI * 2);
-                ctx.fill();
+            for (let b of interpolatedBullets) {
+                if (b && b.renderX !== undefined && b.renderY !== undefined) {
+                    ctx.beginPath();
+                    ctx.arc(b.renderX, b.renderY, BULLET_SIZE, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             }
 
-            // Draw enemy bullets
             for (let b of interpolatedEnemyBullets) {
                 const now = performance.now();
                 const age = now - (b.createdAt || now);
@@ -1643,7 +2476,6 @@
 
             ctx.restore();
 
-            // FPS counter
             frameCount++;
             if (nowPerf - lastFpsUpdate >= 1000) {
                 document.getElementById('fps').innerHTML = `FPS: ${frameCount}`;
@@ -1661,15 +2493,9 @@
             canvas.height = window.innerHeight;
         });
 
-        // Expose to window for debugging
         window.ws = ws;
         window.myId = myId;
         window.players = players;
     </script>
 </body>
 </html>
-
-
-
-
-
