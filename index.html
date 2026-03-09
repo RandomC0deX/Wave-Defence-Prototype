@@ -715,6 +715,329 @@
             50% { transform: translateY(-20px); }
             100% { transform: translateY(0px); }
         }
+
+        /* Mobile UI Scaling */
+        @media (max-width: 768px) {
+            #playerName {
+                font-size: clamp(16px, 4vw, 24px);
+                bottom: 70px;
+            }
+
+            #waveInfo {
+                min-width: auto;
+                width: auto;
+                max-width: 200px;
+                padding: 8px 12px;
+                font-size: clamp(12px, 3vw, 16px);
+                top: 5px;
+            }
+
+            #waveDisplay {
+                font-size: clamp(14px, 4vw, 18px);
+            }
+
+            #enemyCount {
+                font-size: clamp(12px, 3.5vw, 14px);
+            }
+
+            #leaderboard {
+                width: auto;
+                min-width: 120px;
+                max-width: 180px;
+                font-size: clamp(10px, 2.5vw, 12px);
+                top: 5px;
+                right: 5px;
+                padding: 5px;
+            }
+
+            #hpBarContainer {
+                width: min(250px, 70vw);
+                height: 15px;
+                bottom: 10px;
+            }
+
+            #hpText {
+                font-size: clamp(10px, 2.5vw, 12px);
+            }
+
+            #Score {
+                font-size: clamp(10px, 2.5vw, 12px);
+                bottom: 35px;
+            }
+
+            /* Scale menu for mobile */
+            .menu-container {
+                min-width: auto;
+                width: 90%;
+                max-width: 400px;
+                padding: 30px 20px;
+            }
+
+            .game-title {
+                font-size: clamp(40px, 10vw, 60px);
+                margin-bottom: 30px;
+            }
+
+            .menu-btn {
+                font-size: clamp(18px, 4vw, 22px);
+                padding: 12px 20px;
+            }
+
+            .play-btn {
+                font-size: clamp(24px, 5vw, 28px);
+            }
+
+            .name-input-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            #playerNameInput {
+                width: 100%;
+                font-size: 16px;
+                padding: 10px;
+            }
+
+            .name-set-btn {
+                width: 100%;
+                padding: 10px;
+                font-size: 16px;
+            }
+
+            .menu-footer {
+                font-size: 12px;
+            }
+
+            /* Scale chat for mobile */
+            #chatContainer {
+                width: min(200px, 40vw);
+                bottom: 5px;
+                left: 5px;
+            }
+
+            #chatContainer:not(.collapsed) {
+                width: min(250px, 60vw);
+            }
+
+            #chatContainer.collapsed {
+                width: min(80px, 20vw);
+                height: 30px;
+            }
+
+            #chatHeader {
+                padding: 5px 8px;
+                font-size: clamp(10px, 2.5vw, 12px);
+                height: 20px;
+            }
+
+            #chatMessages {
+                font-size: clamp(10px, 2vw, 11px);
+                padding: 5px;
+                max-height: 150px;
+            }
+
+            .chat-input-container {
+                padding: 4px;
+            }
+
+            #chatInput {
+                font-size: clamp(10px, 2vw, 11px);
+                padding: 4px;
+            }
+
+            #chatSend {
+                font-size: clamp(10px, 2vw, 11px);
+                padding: 4px 8px;
+            }
+
+            /* Scale respawn screen for mobile */
+            #respawnScreen .skull {
+                font-size: min(80px, 20vw);
+            }
+
+            #respawnScreen .title {
+                font-size: min(48px, 12vw);
+            }
+
+            #respawnScreen .wave-text {
+                font-size: min(24px, 6vw);
+            }
+
+            #respawnScreen button {
+                font-size: min(32px, 8vw);
+                padding: min(15px, 4vw) min(40px, 10vw);
+            }
+
+            #fps, #debug {
+                font-size: 10px;
+                padding: 3px 6px;
+            }
+
+            #debug {
+                max-width: min(200px, 40vw);
+            }
+
+            #dpad .dpad-container {
+                transform: scale(0.8);
+                transform-origin: bottom left;
+            }
+
+            #rightControls {
+                transform: scale(0.8);
+                transform-origin: bottom right;
+                gap: 15px;
+            }
+
+            .joystick {
+                width: 100px;
+                height: 100px;
+            }
+
+            .joystick-handle {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+
+            .mobile-shoot-btn {
+                width: 70px;
+                height: 70px;
+                font-size: 30px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            #hpBarContainer {
+                width: min(200px, 60vw);
+                height: 12px;
+            }
+
+            #hpText {
+                font-size: 9px;
+            }
+
+            #playerName {
+                font-size: 14px;
+                bottom: 60px;
+            }
+
+            #Score {
+                font-size: 9px;
+                bottom: 30px;
+            }
+
+            #chatContainer:not(.collapsed) {
+                width: min(220px, 70vw);
+            }
+
+            #chatMessages {
+                max-height: 120px;
+            }
+        }
+
+        @media (max-width: 768px) and (orientation: landscape) {
+            #hpBarContainer {
+                width: min(200px, 40vw);
+                bottom: 5px;
+            }
+
+            #playerName {
+                bottom: 45px;
+            }
+
+            #Score {
+                bottom: 25px;
+            }
+
+            #chatContainer:not(.collapsed) {
+                max-height: 200px;
+            }
+
+            #chatMessages {
+                max-height: 100px;
+            }
+
+            #dpad .dpad-container {
+                transform: scale(0.7);
+            }
+
+            #rightControls {
+                transform: scale(0.7);
+                gap: 10px;
+            }
+
+            .joystick {
+                width: 80px;
+                height: 80px;
+            }
+
+            .joystick-handle {
+                width: 35px;
+                height: 35px;
+            }
+
+            .mobile-shoot-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .menu-btn, 
+            .name-set-btn,
+            #chatSend,
+            #dpad .dpad-btn,
+            .mobile-shoot-btn,
+            .joystick-handle {
+                min-height: 44px; 
+                min-width: 44px;
+            }
+
+            .menu-btn,
+            #playerNameInput,
+            #chatInput,
+            #dpad .dpad-btn,
+            .mobile-shoot-btn {
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                user-select: none;
+            }
+
+            .menu-btn:active,
+            .name-set-btn:active,
+            #chatSend:active,
+            #dpad .dpad-btn:active,
+            .mobile-shoot-btn:active {
+                opacity: 0.7;
+            }
+        }
+        
+        @supports (padding: max(0px)) {
+            #playerName {
+                bottom: max(55px, env(safe-area-inset-bottom));
+            }
+
+            #hpBarContainer {
+                bottom: max(15px, env(safe-area-inset-bottom));
+            }
+
+            #dpad {
+                bottom: max(30px, env(safe-area-inset-bottom));
+                left: max(30px, env(safe-area-inset-left));
+            }
+
+            #rightControls {
+                bottom: max(30px, env(safe-area-inset-bottom));
+                right: max(30px, env(safe-area-inset-right));
+            }
+
+            #chatContainer {
+                bottom: max(10px, env(safe-area-inset-bottom));
+                left: max(10px, env(safe-area-inset-left));
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -948,7 +1271,7 @@
         document.getElementById('mainMenu').style.display = 'none';
 
         // Create connection and set up handlers immediately
-        ws = new WebSocket('wss://ran.taila641d5.ts.net');
+        ws = new WebSocket('ws://localhost:10000');
 
         ws.onopen = () => {
             debug('✅ Connected to server');
