@@ -1,4 +1,3 @@
-# for later: import struct
 import websockets
 import asyncio
 import json
@@ -20,45 +19,113 @@ wave_number = 0
 wave_active = False
 sub_wave_index = 0
 enemies_spawned_this_wave = 0
+enemy_shoot_states = {}
 
 WAVE_CONFIG = {
     1: [
-        {"count": 5, "threshold": 0, "type": "normal"},       
-        {"count": 5, "threshold": 2, "type": "fast"}    
+        {"count": 2, "threshold": 0, "type": "mercenary"},
+        {"count": 2, "threshold": 1, "type": "fast"}        
     ],
     2: [
-        {"count": 5, "threshold": 0, "type": "normal"},
-        {"count": 2, "threshold": 3, "type": "explosive"},
-        {"count": 3, "threshold": 2, "type": "fast"}
+        {"count": 3, "threshold": 0, "type": "normal"},
+        {"count": 1, "threshold": 2, "type": "tank"}        
     ],
     3: [
-        {"count": 5, "threshold": 0, "type": "normal"},
-        {"count": 2, "threshold": 5, "type": "tank"},
-        {"count": 5, "threshold": 5, "type": "fast"}
+        {"count": 3, "threshold": 0, "type": "fast"},
+        {"count": 2, "threshold": 1, "type": "explosive"},
+        {"count": 3, "threshold": 0, "type": "normal"}        
     ],
     4: [
-        {"count": 4, "threshold": 0, "type": "shooter"},
         {"count": 1, "threshold": 0, "type": "tank"},
-        {"count": 5, "threshold": 3, "type": "fast"}
+        {"count": 2, "threshold": 1, "type": "normal"},
+        {"count": 3, "threshold": 0, "type": "fast"}        
     ],
-    5:[
-        {"count": 4, "threshold": 0, "type": "normal"},
-        {"count": 5, "threshold": 0, "type": "shooter"},
-        {"count": 5, "threshold": 5, "type": "fast"},
-        {"count": 3, "threshold": 2, "type": "explosive"},
-        {"count": 1, "threshold": 0, "type": "boss"}
+    5: [
+        {"count": 3, "threshold": 0, "type": "shooter"},
+        {"count": 2, "threshold": 2, "type": "explosive"},
+        {"count": 1, "threshold": 0, "type": "mercenary"}   
     ]
 }
 
-# Enemy Types - speeds in pixels per second
+# Enemy Types
 ENEMY_TYPES = {
-    "normal": {"health": 15, "size": 18, "speed": 100, "color": "#8B0000", "score": 10, "damage": 12},
-    "fast": {"health": 5, "size": 15, "speed": 180, "color": "#FF6600", "score": 15, "damage": 8},
-    "tank": {"health": 50, "size": 25, "speed": 60, "color": "#800080", "score": 25, "damage": 25},
-    "boss": {"health": 160, "size": 40, "speed": 40, "color": "#FFD700", "score": 100, "damage": 40},
-    "explosive": {"health": 1, "size": 20, "speed": 200, "color": "#FF4444", "score": 20, "damage": 30},
-    "shooter": {"health": 15, "size": 20, "speed": 80, "color": "#00FFFF", "score": 25, "damage": 8, "shoot_cooldown": 2.0},
-    "boss_projectile": {"health": 1, "size": 10, "speed": 150, "color": "#FF00FF", "score": 0, "damage": 15},
+    "normal": 
+       {"health": 15, 
+        "size": 18, 
+        "speed": 100, 
+        "color": 
+        "#8B0000", 
+        "score": 10, 
+        "damage": 12
+        },
+
+    "fast": 
+        {"health": 5,
+          "size": 15, 
+          "speed": 180, 
+          "color": "#FF6600",
+          "score": 15,
+          "damage": 8
+          },
+
+    "tank": 
+        {"health": 50, 
+         "size": 25, 
+         "speed": 60, 
+         "color": "#800080", 
+         "score": 25, 
+         "damage": 25
+         },
+
+    "explosive": 
+        {"health": 1, 
+        "size": 20, 
+        "speed": 200, 
+        "color": "#FF4444", 
+        "score": 20, 
+        "damage": 30
+        },
+
+    "shooter": 
+        {"health": 15, 
+        "size": 20, 
+        "speed": 80, 
+        "color": "#00FFFF", 
+        "score": 25, 
+        "damage": 8, 
+        "shoot_cooldown": 2.0, 
+        "bullet_speed": 150,
+        "shoot_pattern": "rapid",
+        "burst_count": 3,
+        "burst_delay": 0.25,
+        "bullet_color": "#00FFFF",
+        "bullet_size": 8  
+        },
+    "orbiter": {
+        "health": 25, "size": 22, "speed": 50, "color": "#00FFFF", 
+        "score": 35, "damage": 15,
+        "category": "ranged",
+        "shoot_pattern": "orbit_lock",
+        "orbit_bullets": 4,
+        "orbit_radius": 70,
+        "orbit_speed": 2.0,
+        "charge_time": 2.0,
+        "bullet_speed": 200,
+        "bullet_size": 8,
+        "bullet_color": "#00FFFF",
+        "recharge_time": 3.0
+    },
+    "mercenary": {
+        "health": 400, 
+        "size": 45, 
+        "speed": 40, 
+        "color": "#FFD700", 
+        "score": 150, 
+        "damage": 25,
+        "max_health": 400,
+        "boss": True
+    },
+    
 }
 
 # Optimization constants
@@ -81,12 +148,10 @@ def build_spatial_grid():
     return grid
 
 def get_nearby_enemies(grid, enemy, radius=50):
-    """Get all enemies in nearby grid cells"""
     x, y = enemy["x"], enemy["y"]
     center_cell = get_grid_cell(x, y)
     nearby = []
     
-    # Check the 3x3 grid around the enemy
     for dx in [-1, 0, 1]:
         for dy in [-1, 0, 1]:
             cell = (center_cell[0] + dx, center_cell[1] + dy)
@@ -96,90 +161,509 @@ def get_nearby_enemies(grid, enemy, radius=50):
                         nearby.append(other)
     return nearby
 
-async def enemy_shooters():
+async def handle_enemy_shooting():
+    """Main handler for all enemy shooting patterns"""
     while True:
-        await asyncio.sleep(0.1) 
-        
+        await asyncio.sleep(0.016) 
         current_time = time.time()
         
         for enemy in enemies[:]:
-            if enemy.get("type") != "shooter":
+            enemy_type = enemy.get("type", "")
+            
+            if enemy_type not in ENEMY_TYPES:
                 continue
                 
-            last_shot = enemy.get("last_shot_time", 0)
-            shoot_cooldown = enemy.get("shoot_cooldown", 2.0)
-            
-            if current_time - last_shot < shoot_cooldown:
+            pattern = ENEMY_TYPES[enemy_type].get("shoot_pattern")
+            if not pattern:
                 continue
+            
+            enemy_id = enemy["id"]
+            if enemy_id not in enemy_shoot_states:
+                enemy_shoot_states[enemy_id] = {
+                    "pattern": pattern,
+                    "last_shot_time": 0,
+                    "phase": "idle",
+                    "bullets": [],
+                    "target": None,
+                    "aim_start_time": 0
+                }
+            
+            state = enemy_shoot_states[enemy_id]
+            
+            if pattern == "orbit_lock":
+                await handle_orbit_pattern(enemy, state, current_time)
+            elif pattern == "arc":
+                await handle_arc_pattern(enemy, state, current_time)
+            elif pattern == "rapid":
+                await handle_rapid_pattern(enemy, state, current_time)
+            elif pattern == "spread":
+                await handle_spread_pattern(enemy, state, current_time)
+            elif pattern == "laser":
+                await handle_laser_pattern(enemy, state, current_time)
+            elif pattern == "mortar":
+                await handle_mortar_pattern(enemy, state, current_time)
+            elif pattern == "homing":
+                await handle_homing_pattern(enemy, state, current_time)
+            elif pattern == "wave":
+                await handle_wave_pattern(enemy, state, current_time)
+            elif pattern == "boomerang":
+                await handle_boomerang_pattern(enemy, state, current_time)
+
+async def handle_orbit_pattern(enemy, state, current_time):
+    """Orbiter: Bullets orbit then lock on"""
+    config = ENEMY_TYPES["orbiter"]
+    
+    if state["phase"] == "idle":
+        state["phase"] = "charging"
+        state["charge_start"] = current_time
+        state["orbit_angle"] = random.uniform(0, math.pi * 2)
+        
+        state["bullets"] = []
+        for i in range(config["orbit_bullets"]):
+            state["bullets"].append({
+                "id": f"orbit_{enemy['id']}_{i}",
+                "index": i,
+                "active": True,
+                "damage": config["damage"],
+                "size": config["bullet_size"],
+                "color": config["bullet_color"]
+            })
+    
+    elif state["phase"] == "charging":
+        state["orbit_angle"] += config["orbit_speed"] * 0.016
+        
+        if current_time - state["charge_start"] >= config["charge_time"]:
+            target = find_closest_player(enemy["x"], enemy["y"])
+            if target:
+                state["target"] = target
+                state["phase"] = "locked"
+                state["lock_time"] = current_time
+            
+                for i, bullet in enumerate(state["bullets"]):
+                    dx = target["x"] - enemy["x"]
+                    dy = target["y"] - enemy["y"]
+                    dist = math.hypot(dx, dy)
+                    if dist > 0:
+                        spread = (i - config["orbit_bullets"]/2) * 0.1
+                        angle = math.atan2(dy, dx) + spread
+                        bullet["vx"] = math.cos(angle) * config["bullet_speed"]
+                        bullet["vy"] = math.sin(angle) * config["bullet_speed"]
+            else:
+                state["phase"] = "idle"
+    
+    elif state["phase"] == "locked":
+        if current_time - state["lock_time"] >= 0.2:
+            state["phase"] = "firing"
+            state["fire_index"] = 0
+            state["last_fire"] = current_time
+    
+    elif state["phase"] == "firing":
+        if state["fire_index"] < len(state["bullets"]):
+            if current_time - state["last_fire"] >= 0.1:
+                bullet = state["bullets"][state["fire_index"]]
                 
-            closest_player = None
-            closest_dist = float('inf')
+                enemy_bullets.append({
+                    "id": f"enemy_bullet_{current_time}_{random.randint(1000,9999)}",
+                    "x": enemy["x"],
+                    "y": enemy["y"],
+                    "vx": bullet["vx"],
+                    "vy": bullet["vy"],
+                    "damage": config["damage"],
+                    "created_at": current_time,
+                    "owner": "enemy",
+                    "color": config["bullet_color"],
+                    "size": config["bullet_size"],
+                    "pattern": "orbit"
+                })
+                
+                state["fire_index"] += 1
+                state["last_fire"] = current_time
+        else:
+            state["phase"] = "recharge"
+            state["recharge_start"] = current_time
+    
+    elif state["phase"] == "recharge":
+        if current_time - state["recharge_start"] >= config["recharge_time"]:
+            state["phase"] = "idle"
+            state["bullets"] = []
+
+async def handle_arc_pattern(enemy, state, current_time):
+    """Thrower: Arcing projectiles"""
+    config = ENEMY_TYPES["thrower"]
+    
+    if current_time - state.get("last_shot_time", 0) >= config["shoot_cooldown"]:
+        target = find_closest_player(enemy["x"], enemy["y"])
+        if target:
+            dx = target["x"] - enemy["x"]
+            dy = target["y"] - enemy["y"]
+            dist = math.hypot(dx, dy)
             
-            for player in players.values():
-                if player.get("ghost", False) or player.get("dead", False):
-                    continue
-                    
-                dist = math.hypot(enemy["x"] - player["x"], enemy["y"] - player["y"])
-                if dist < 400 and dist < closest_dist: 
-                    closest_dist = dist
-                    closest_player = player
-            
-            if closest_player:
-                dx = closest_player["x"] - enemy["x"]
-                dy = closest_player["y"] - enemy["y"]
+            if dist > 0:
+                travel_time = dist / config["bullet_speed"]
+                target_x = target["x"] + target.get("vx", 0) * travel_time * config["prediction"]
+                target_y = target["y"] + target.get("vy", 0) * travel_time * config["prediction"]
+                
+                dx = target_x - enemy["x"]
+                dy = target_y - enemy["y"]
+                dist = math.hypot(dx, dy)
+                
+                angle = math.atan2(dy, dx)
+                
+                enemy_bullets.append({
+                    "id": f"arc_{current_time}_{random.randint(1000,9999)}",
+                    "x": enemy["x"],
+                    "y": enemy["y"],
+                    "vx": math.cos(angle) * config["bullet_speed"],
+                    "vy": math.sin(angle) * config["bullet_speed"],
+                    "arc_height": config["arc_height"],
+                    "damage": config["damage"],
+                    "created_at": current_time,
+                    "owner": "enemy",
+                    "color": config["bullet_color"],
+                    "size": config["bullet_size"],
+                    "pattern": "arc",
+                    "start_x": enemy["x"],
+                    "start_y": enemy["y"],
+                    "target_x": target_x,
+                    "target_y": target_y
+                })
+                
+                state["last_shot_time"] = current_time
+
+async def handle_rapid_pattern(enemy, state, current_time):
+    enemy_type = enemy.get("type", "")
+    config = ENEMY_TYPES[enemy_type]
+    
+    if state["phase"] == "idle":
+        if current_time - state.get("last_shot_time", 0) >= config["shoot_cooldown"]:
+            target = find_closest_player(enemy["x"], enemy["y"])
+            if target:
+                state["phase"] = "bursting"
+                state["burst_count"] = 0
+                state["burst_start"] = current_time
+                state["target_x"] = target["x"]
+                state["target_y"] = target["y"]
+    
+    elif state["phase"] == "bursting":
+        if state["burst_count"] < config["burst_count"]:
+            if current_time - state.get("last_burst_time", 0) >= config["burst_delay"]:
+                dx = state["target_x"] - enemy["x"]
+                dy = state["target_y"] - enemy["y"]
                 dist = math.hypot(dx, dy)
                 
                 if dist > 0:
-                    enemy_bullet = {
-                        "id": f"enemy_bullet_{current_time}_{random.randint(1000,9999)}",
+                    inaccuracy = random.uniform(-0.1, 0.1)
+                    angle = math.atan2(dy, dx) + inaccuracy
+                    
+                    bullet_id = f"rapid_{current_time}_{enemy['id']}_{state['burst_count']}"
+
+                    enemy_bullets.append({
+                        "id": bullet_id,
                         "x": enemy["x"],
                         "y": enemy["y"],
-                        "vx": (dx / dist) * 150, 
-                        "vy": (dy / dist) * 150,
-                        "damage": enemy.get("damage", 8),
+                        "vx": math.cos(angle) * config["bullet_speed"],
+                        "vy": math.sin(angle) * config["bullet_speed"],
+                        "damage": config["damage"],
                         "created_at": current_time,
                         "owner": "enemy",
-                        "color": "#FF00FF",
-                        "size": 8
-                    }
-                    enemy_bullets.append(enemy_bullet)
-                    enemy["last_shot_time"] = current_time
+                        "color": config["bullet_color"],
+                        "size": config["bullet_size"],
+                        "pattern": "rapid",
+                        "source_enemy": enemy["id"]
+                    })
+                    
+                    state["burst_count"] += 1
+                    state["last_burst_time"] = current_time
+        else:
+            state["phase"] = "idle"
+            state["last_shot_time"] = current_time
+
+async def handle_spread_pattern(enemy, state, current_time):
+    config = ENEMY_TYPES["sprayer"]
+    
+    if current_time - state.get("last_shot_time", 0) >= config["shoot_cooldown"]:
+        target = find_closest_player(enemy["x"], enemy["y"])
+        if target:
+            dx = target["x"] - enemy["x"]
+            dy = target["y"] - enemy["y"]
+            base_angle = math.atan2(dy, dx)
+            
+            for i in range(config["spread_count"]):
+                spread = (i - config["spread_count"]/2) * config["spread_angle"] / config["spread_count"]
+                angle = base_angle + spread
+                
+                enemy_bullets.append({
+                    "id": f"spread_{current_time}_{i}",
+                    "x": enemy["x"],
+                    "y": enemy["y"],
+                    "vx": math.cos(angle) * config["bullet_speed"],
+                    "vy": math.sin(angle) * config["bullet_speed"],
+                    "damage": config["damage"],
+                    "created_at": current_time,
+                    "owner": "enemy",
+                    "color": config["bullet_color"],
+                    "size": config["bullet_size"],
+                    "pattern": "spread"
+                })
+            
+            state["last_shot_time"] = current_time
+
+async def handle_mortar_pattern(enemy, state, current_time):
+    """Mortar: Area denial explosions"""
+    config = ENEMY_TYPES.get("mortar", {
+        "shoot_cooldown": 3.5,
+        "bullet_speed": 100,
+        "bullet_size": 15,
+        "bullet_color": "#8B4513",
+        "damage": 25,
+        "explosion_radius": 60,
+        "aim_time": 1.5
+    })
+    
+    if state["phase"] == "idle":
+        if current_time - state.get("last_shot_time", 0) >= config["shoot_cooldown"]:
+            target = find_closest_player(enemy["x"], enemy["y"])
+            if target:
+                state["phase"] = "aiming"
+                state["aim_start"] = current_time
+                state["target_x"] = target["x"]
+                state["target_y"] = target["y"]
+    
+    elif state["phase"] == "aiming":
+        if current_time - state["aim_start"] >= config["aim_time"]:
+            dx = state["target_x"] - enemy["x"]
+            dy = state["target_y"] - enemy["y"]
+            dist = math.hypot(dx, dy)
+            
+            if dist > 0:
+                enemy_bullets.append({
+                    "id": f"mortar_{current_time}_{random.randint(1000,9999)}",
+                    "x": enemy["x"],
+                    "y": enemy["y"],
+                    "vx": (dx / dist) * config["bullet_speed"],
+                    "vy": (dy / dist) * config["bullet_speed"],
+                    "damage": config["damage"],
+                    "created_at": current_time,
+                    "owner": "enemy",
+                    "color": config["bullet_color"],
+                    "size": config["bullet_size"],
+                    "pattern": "mortar",
+                    "explosion_radius": config["explosion_radius"],
+                    "target_x": state["target_x"],
+                    "target_y": state["target_y"]
+                })
+            
+            state["phase"] = "idle"
+            state["last_shot_time"] = current_time
+
+async def handle_laser_pattern(enemy, state, current_time):
+    """Sniper: Laser-like precise shots"""
+    config = ENEMY_TYPES.get("sniper", {
+        "shoot_cooldown": 4.0,
+        "bullet_speed": 400,
+        "bullet_size": 4,
+        "bullet_color": "#FF1493",
+        "damage": 35,
+        "charge_up": 1.0,
+        "laser_width": 3
+    })
+    
+    if state["phase"] == "idle":
+        if current_time - state.get("last_shot_time", 0) >= config["shoot_cooldown"]:
+            target = find_closest_player(enemy["x"], enemy["y"])
+            if target:
+                state["phase"] = "charging"
+                state["charge_start"] = current_time
+                state["target"] = target
+ 
+                dx = target["x"] - enemy["x"]
+                dy = target["y"] - enemy["y"]
+                state["laser_angle"] = math.atan2(dy, dx)
+    
+    elif state["phase"] == "charging":
+        if current_time - state["charge_start"] >= config["charge_up"]:
+            dx = state["target"]["x"] - enemy["x"]
+            dy = state["target"]["y"] - enemy["y"]
+            dist = math.hypot(dx, dy)
+            
+            if dist > 0:
+                enemy_bullets.append({
+                    "id": f"laser_{current_time}_{random.randint(1000,9999)}",
+                    "x": enemy["x"],
+                    "y": enemy["y"],
+                    "vx": (dx / dist) * config["bullet_speed"],
+                    "vy": (dy / dist) * config["bullet_speed"],
+                    "damage": config["damage"],
+                    "created_at": current_time,
+                    "owner": "enemy",
+                    "color": config["bullet_color"],
+                    "size": config["bullet_size"],
+                    "pattern": "laser",
+                    "laser_width": config["laser_width"]
+                })
+            
+            state["phase"] = "idle"
+            state["last_shot_time"] = current_time
+
+async def handle_homing_pattern(enemy, state, current_time):
+    config = ENEMY_TYPES["seeker"]
+    
+    if current_time - state.get("last_shot_time", 0) >= config["shoot_cooldown"]:
+        target = find_closest_player(enemy["x"], enemy["y"])
+        if target:
+            dx = target["x"] - enemy["x"]
+            dy = target["y"] - enemy["y"]
+            dist = math.hypot(dx, dy)
+            
+            if dist > 0:
+                enemy_bullets.append({
+                    "id": f"homing_{current_time}_{random.randint(1000,9999)}",
+                    "x": enemy["x"],
+                    "y": enemy["y"],
+                    "vx": (dx / dist) * config["bullet_speed"],
+                    "vy": (dy / dist) * config["bullet_speed"],
+                    "damage": config["damage"],
+                    "created_at": current_time,
+                    "owner": "enemy",
+                    "color": config["bullet_color"],
+                    "size": config["bullet_size"],
+                    "pattern": "homing",
+                    "homing_strength": config["homing_strength"],
+                    "max_turn_rate": config["max_turn_rate"],
+                    "target_id": id(target) 
+                })
+                
+                state["last_shot_time"] = current_time
+
+async def handle_wave_pattern(enemy, state, current_time):
+    config = ENEMY_TYPES["waver"]
+    
+    if current_time - state.get("last_shot_time", 0) >= config["shoot_cooldown"]:
+        target = find_closest_player(enemy["x"], enemy["y"])
+        if target:
+            dx = target["x"] - enemy["x"]
+            dy = target["y"] - enemy["y"]
+            base_angle = math.atan2(dy, dx)
+            
+            for i in range(config["bullets_per_shot"]):
+                offset = (i - config["bullets_per_shot"]/2) * 0.2
+                angle = base_angle + offset
+                
+                enemy_bullets.append({
+                    "id": f"wave_{current_time}_{i}",
+                    "x": enemy["x"],
+                    "y": enemy["y"],
+                    "vx": math.cos(angle) * config["bullet_speed"],
+                    "vy": math.sin(angle) * config["bullet_speed"],
+                    "damage": config["damage"],
+                    "created_at": current_time,
+                    "owner": "enemy",
+                    "color": config["bullet_color"],
+                    "size": config["bullet_size"],
+                    "pattern": "wave",
+                    "wave_amplitude": config["wave_amplitude"],
+                    "wave_frequency": config["wave_frequency"],
+                    "wave_time": 0,
+                    "base_angle": angle
+                })
+            
+            state["last_shot_time"] = current_time
+
+async def handle_boomerang_pattern(enemy, state, current_time):
+    config = ENEMY_TYPES["boomerang"]
+    
+    if current_time - state.get("last_shot_time", 0) >= config["shoot_cooldown"]:
+        target = find_closest_player(enemy["x"], enemy["y"])
+        if target:
+            dx = target["x"] - enemy["x"]
+            dy = target["y"] - enemy["y"]
+            dist = math.hypot(dx, dy)
+            
+            if dist > 0:
+                enemy_bullets.append({
+                    "id": f"boomerang_{current_time}",
+                    "x": enemy["x"],
+                    "y": enemy["y"],
+                    "vx": (dx / dist) * config["bullet_speed"],
+                    "vy": (dy / dist) * config["bullet_speed"],
+                    "damage": config["damage"],
+                    "created_at": current_time,
+                    "owner": "enemy",
+                    "color": config["bullet_color"],
+                    "size": config["bullet_size"],
+                    "pattern": "boomerang",
+                    "return_time": current_time + config["return_time"],
+                    "start_x": enemy["x"],
+                    "start_y": enemy["y"],
+                    "enemy_id": enemy["id"]
+                })
+                
+                state["last_shot_time"] = current_time
+
+def find_closest_player(x, y):
+    closest = None
+    closest_dist = float('inf')
+    
+    for player in players.values():
+        if player.get("ghost", False) or player.get("dead", False):
+            continue
+        dist = math.hypot(x - player["x"], y - player["y"])
+        if dist < closest_dist:
+            closest_dist = dist
+            closest = player
+    
+    return closest
 
 async def move_enemy_bullets():
     last_time = time.time()
-    BULLET_LIFETIME = 3
+    BULLET_LIFETIME = 5
     
     while True:
-        await asyncio.sleep(0.02)
+        await asyncio.sleep(0.016)
         current_time = time.time()
         delta_time = current_time - last_time
         last_time = current_time
         
         for bullet in enemy_bullets[:]:
+            pattern = bullet.get("pattern")
+            
             bullet["x"] += bullet["vx"] * delta_time
             bullet["y"] += bullet["vy"] * delta_time
             
-            if (bullet["x"] < 0 or bullet["x"] > 2000 or
-                bullet["y"] < 0 or bullet["y"] > 2000):
-                enemy_bullets.remove(bullet)
-                continue
+            if not bullet.get("infinite_range", False):
+                if (bullet["x"] < 0 or bullet["x"] > 2000 or
+                    bullet["y"] < 0 or bullet["y"] > 2000):
+                    enemy_bullets.remove(bullet)
+                    continue
+            else:
+                if (bullet["x"] < 0 or bullet["x"] > 2000 or
+                    bullet["y"] < 0 or bullet["y"] > 2000):
+                    enemy_bullets.remove(bullet)
+                    continue
             
-            if current_time - bullet["created_at"] > BULLET_LIFETIME:
-                enemy_bullets.remove(bullet)
-                continue
+            if not bullet.get("infinite_range", False):
+                if current_time - bullet["created_at"] > BULLET_LIFETIME:
+                    enemy_bullets.remove(bullet)
+                    continue
 
             for player_id, player in list(players.items()):
                 if player.get("ghost", False) or player.get("dead", False):
                     continue
-                    
+                
+                bullet_size = bullet.get("size", 8)
+                hitbox_radius = bullet_size + 10 
+                
+                if bullet.get("pattern") == "giant":
+                    hitbox_radius = bullet_size * 1.5
+                
                 dist = math.hypot(bullet["x"] - player["x"], bullet["y"] - player["y"])
-                if dist < 25: 
+                if dist < hitbox_radius: 
                     player["health"] -= bullet["damage"]
                     if bullet in enemy_bullets:
                         enemy_bullets.remove(bullet)
                     
                     if player["health"] <= 0:
-                        print(f"💀 Player {player_id} killed by enemy projectile!")
+                        print(f"💀 Player {player_id} killed by Mercenary!")
                         player["dead"] = True
                         player["health"] = 0
                         player["ghost"] = True
@@ -195,87 +679,186 @@ async def move_enemy_bullets():
                     break
 
 async def boss_attacks():
-    """Handle boss special abilities"""
     while True:
         await asyncio.sleep(0.5)
+        current_time = time.time()
         
         for enemy in enemies[:]:
-            if enemy.get("type") != "boss":
+            boss_type = enemy.get("type")
+
+            if boss_type not in ["mercenary"]:
                 continue
-                
-            current_time = time.time()
+            
             boss_health = enemy["health"]
             max_health = enemy["max_health"]
             health_percent = boss_health / max_health
             
-            if health_percent > 0.66:
-                if current_time - enemy.get("last_minion_time", 0) > 5:
-                    angle = random.uniform(0, math.pi * 2)
-                    distance = 100
-                    minion_x = enemy["x"] + math.cos(angle) * distance
-                    minion_y = enemy["y"] + math.sin(angle) * distance
+            # BOSS 1: Mercenary 
+            if boss_type == "mercenary":
+                if health_percent > 0.66:
+                    # PHASE 1
+                    enemy["color"] = "#FFD700" 
                     
-                    await spawn_enemy(minion_x, minion_y, "fast")
-                    enemy["last_minion_time"] = current_time
-                    print("👾 Boss spawned a minion!")
-
-            elif health_percent > 0.33:
-                if current_time - enemy.get("last_ring_time", 0) > 3:
-                    for i in range(8):
-                        angle = (i / 8) * math.pi * 2
-                        bullet = {
-                            "id": f"boss_bullet_{current_time}_{i}",
-                            "x": enemy["x"],
-                            "y": enemy["y"],
-                            "vx": math.cos(angle) * 120,
-                            "vy": math.sin(angle) * 120,
-                            "damage": 10,
-                            "created_at": current_time,
-                            "owner": "enemy",
-                            "color": "#FF4444",
-                            "size": 8
-                        }
-                        enemy_bullets.append(bullet)
-                    enemy["last_ring_time"] = current_time
-                    print("💥 Boss fired ring of bullets!")
-            
-            else:
-                enemy["speed"] = 80 
-                
-                if current_time - enemy.get("last_rapid_time", 0) > 0.5:
-                    closest_player = None
-                    closest_dist = float('inf')
-                    
-                    for player in players.values():
-                        if player.get("ghost", False) or player.get("dead", False):
-                            continue
-                        dist = math.hypot(enemy["x"] - player["x"], enemy["y"] - player["y"])
-                        if dist < closest_dist:
-                            closest_dist = dist
-                            closest_player = player
-                    
-                    if closest_player:
-                        dx = closest_player["x"] - enemy["x"]
-                        dy = closest_player["y"] - enemy["y"]
-                        dist = math.hypot(dx, dy)
-                        
-                        if dist > 0:
-                            for i in range(-1, 2):
-                                spread = i * 0.2
+                    if current_time - enemy.get("last_giant_shot", 0) > 4:
+                        target = find_closest_player(enemy["x"], enemy["y"])
+                        if target:
+                            target_x = target["x"]
+                            target_y = target["y"]
+                            
+                            dx = target_x - enemy["x"]
+                            dy = target_y - enemy["y"]
+                            dist = math.hypot(dx, dy)
+                            
+                            if dist > 0:
                                 bullet = {
-                                    "id": f"boss_rapid_{current_time}_{i}",
+                                    "id": f"giant_bullet_{current_time}_{enemy['id']}", 
                                     "x": enemy["x"],
                                     "y": enemy["y"],
-                                    "vx": (dx / dist + spread) * 180,
-                                    "vy": (dy / dist + spread) * 180,
-                                    "damage": 15,
+                                    "vx": (dx / dist) * 250,
+                                    "vy": (dy / dist) * 250,
+                                    "damage": 30,
                                     "created_at": current_time,
                                     "owner": "enemy",
-                                    "color": "#FFAA00",
-                                    "size": 10
+                                    "color": "#FFD700",
+                                    "size": 25,
+                                    "pattern": "giant",
+                                    "infinite_range": True,
+                                    "boss_phase": 1,
+                                    "shrinkStart": None
                                 }
                                 enemy_bullets.append(bullet)
-                    enemy["last_rapid_time"] = current_time
+                                enemy["last_giant_shot"] = current_time
+                                print(f"💥 Mercenary {enemy['id']} fired GIANT bullet!")
+
+                elif health_percent > 0.33:
+                    # PHASE 2
+                    enemy["color"] = "#FF8C00" 
+                    
+                    if current_time - enemy.get("last_rotation_time", 0) > 3:
+                        if "rotation_angle" not in enemy:
+                            enemy["rotation_angle"] = 0
+                        
+                        for i in range(8):
+                            angle = enemy["rotation_angle"] + (i / 8) * math.pi * 2
+                            bullet = {
+                                "id": f"rotating_{current_time}_{enemy['id']}_{i}", 
+                                "x": enemy["x"],
+                                "y": enemy["y"],
+                                "vx": math.cos(angle) * 150,
+                                "vy": math.sin(angle) * 150,
+                                "damage": 15,
+                                "created_at": current_time,
+                                "owner": "enemy",
+                                "color": "#FF8C00",
+                                "size": 10,
+                                "pattern": "rotating",
+                                "rotation_speed": 0.1,
+                                "current_angle": angle,
+                                "boss_phase": 2,
+                                "shrinkStart": 0.8,
+                                "maxLifetime": 4000
+                            }
+                            enemy_bullets.append(bullet)
+
+                    if current_time - enemy.get("last_giant_shot_phase3", 0) > 3:
+                        target = find_closest_player(enemy["x"], enemy["y"])
+                        if target:
+                            target_x = target["x"]
+                            target_y = target["y"]
+                            
+                            dx = target_x - enemy["x"]
+                            dy = target_y - enemy["y"]
+                            dist = math.hypot(dx, dy)
+                            
+                            if dist > 0:
+                                bullet = {
+                                    "id": f"giant_bullet_phase2_{current_time}_{enemy['id']}",
+                                    "x": enemy["x"],
+                                    "y": enemy["y"],
+                                    "vx": (dx / dist) * 300,
+                                    "vy": (dy / dist) * 300,
+                                    "damage": 35,
+                                    "created_at": current_time,
+                                    "owner": "enemy",
+                                    "color": "#FF8C00",
+                                    "size": 27,
+                                    "pattern": "giant",
+                                    "infinite_range": True,
+                                    "boss_phase": 2,
+                                    "shrinkStart": None
+                                }
+                                enemy_bullets.append(bullet)
+                                enemy["last_giant_shot_phase3"] = current_time
+                        
+                        enemy["rotation_angle"] += 0.5
+                        enemy["last_rotation_time"] = current_time
+                        print(f"🔄 Mercenary {enemy['id']} fired rotating pattern!")
+                
+                else:
+                    # PHASE 3
+                    enemy["color"] = "#FF0000" 
+                    enemy["speed"] = 80
+
+                    if current_time - enemy.get("last_giant_shot_phase3", 0) > 2.5:
+                        target = find_closest_player(enemy["x"], enemy["y"])
+                        if target:
+                            # Store target position, not the object
+                            target_x = target["x"]
+                            target_y = target["y"]
+                            
+                            dx = target_x - enemy["x"]
+                            dy = target_y - enemy["y"]
+                            dist = math.hypot(dx, dy)
+                            
+                            if dist > 0:
+                                bullet = {
+                                    "id": f"giant_bullet_phase3_{current_time}_{enemy['id']}",
+                                    "x": enemy["x"],
+                                    "y": enemy["y"],
+                                    "vx": (dx / dist) * 300,
+                                    "vy": (dy / dist) * 300,
+                                    "damage": 35,
+                                    "created_at": current_time,
+                                    "owner": "enemy",
+                                    "color": "#FF4444",
+                                    "size": 30,
+                                    "pattern": "giant",
+                                    "infinite_range": True,
+                                    "boss_phase": 3,
+                                    "shrinkStart": None
+                                }
+                                enemy_bullets.append(bullet)
+                                enemy["last_giant_shot_phase3"] = current_time
+                    
+                    if current_time - enemy.get("last_rotation_time_phase3", 0) > 1.5:
+                        if "rotation_angle" not in enemy:
+                            enemy["rotation_angle"] = 0
+                        
+                        for i in range(12):
+                            angle = enemy["rotation_angle"] + (i / 12) * math.pi * 2
+                            bullet = {
+                                "id": f"rotating_phase3_{current_time}_{enemy['id']}_{i}",  # Include enemy ID
+                                "x": enemy["x"],
+                                "y": enemy["y"],
+                                "vx": math.cos(angle) * 180,
+                                "vy": math.sin(angle) * 180,
+                                "damage": 18,
+                                "created_at": current_time,
+                                "owner": "enemy",
+                                "color": "#FF4444",
+                                "size": 12,
+                                "pattern": "rotating",
+                                "rotation_speed": 0.15,
+                                "current_angle": angle,
+                                "boss_phase": 3,
+                                "shrinkStart": 0.8,
+                                "maxLifetime": 4000
+                            }
+                            enemy_bullets.append(bullet)
+                        
+                        enemy["rotation_angle"] += 0.8
+                        enemy["last_rotation_time_phase3"] = current_time
+                        print(f"💢 Mercenary {enemy['id']} ENRAGED!")
 
 async def spawn_enemy(x, y, enemy_type="normal"):
     global sub_wave_index
@@ -459,7 +1042,7 @@ async def move_bullets():
         delta_time = current_time - last_time
         last_time = current_time
         
-        for bullet in bullets[:]:  # Note the [:] to create a copy while iterating
+        for bullet in bullets[:]:
             bullet["x"] += bullet["vx"] * delta_time
             bullet["y"] += bullet["vy"] * delta_time
 
@@ -506,11 +1089,10 @@ async def move_enemies():
         
         if not enemies or not players:
             continue
-        
-        # Build spatial grid for this frame
+
         grid = build_spatial_grid()
         
-        # Handle enemy-to-enemy collisions using spatial grid
+        # Handle enemy-to-enemy collisions
         processed_pairs = set()
         
         for enemy in enemies:
@@ -574,7 +1156,6 @@ async def move_enemies():
             closest_dist_sq = float('inf')
             
             for player in players.values():
-                # Skip dead or ghost players - enemies ignore them
                 if player.get("dead", False) or player.get("ghost", False) or player.get("health", 0) <= 0:
                     continue
 
@@ -609,7 +1190,7 @@ async def move_enemies():
                         enemy["x"] = new_x
                         enemy["y"] = new_y
         
-        # Check player-enemy collisions with damage
+        # Check player-enemy collisions
         for enemy in enemies[:]:
             enemy_size = enemy.get("size", 18)
             enemy_type = enemy.get("type", "normal")
@@ -617,7 +1198,7 @@ async def move_enemies():
             damage_cooldown = 0.5
             
             for player_id, player in list(players.items()):
-                # Skip ghosts and dead players - they don't take damage
+                # Skip ghosts and dead players
                 if player.get("ghost", False) or player.get("dead", False) or player.get("health", 0) <= 0:
                     continue
 
@@ -664,25 +1245,13 @@ async def handle_client(websocket):
     next_player_id += 1
     clients.add(websocket)
     
-    players[player_id] = {
-        "x": 400,
-        "y": 300,
-        "angle": 0,
-        "health": 100,
-        "score": 0,
-        "dead": False,
-        "ghost": False,
-        "name": f"Player{player_id}"
-    }
-
-    print(f"Player {player_id} connected. Total players: {len(players)}")
+    # Don't add to players dict yet - wait for spawn
+    print(f"Player {player_id} connected (waiting for spawn). Total connections: {len(clients)}")
     
+    # Send ONLY menu init - no player creation yet
     await websocket.send(json.dumps({
-        "type": "init", 
+        "type": "init_menu",
         "id": player_id,
-        "x": players[player_id]["x"], 
-        "y": players[player_id]["y"],
-        "health": players[player_id]["health"],
         "leaderboard": [{"id": pid, "score": p["score"], "name": p.get("name", f"Player{pid}")} 
                         for pid, p in sorted(players.items(), key=lambda x: x[1]["score"], reverse=True)[:10]]
     }))
@@ -691,21 +1260,49 @@ async def handle_client(websocket):
         async for message in websocket:
             data = json.loads(message)
             
-            if data["type"] == "move":
-                # Ghosts can still move around
-                if not players[player_id].get("dead", False) or players[player_id].get("ghost", False):
-                    players[player_id]["x"] = data["x"]
-                    players[player_id]["y"] = data["y"]
-                    players[player_id]["angle"] = data["angle"]
-                else:
-                    await websocket.send(json.dumps({
-                        "type": "position_correction",
-                        "x": players[player_id]["x"],
-                        "y": players[player_id]["y"]
-                    }))
+            if data["type"] == "spawn_player":
+                players[player_id] = {
+                    "x": random.randint(100, 1900),
+                    "y": random.randint(100, 1900),
+                    "angle": 0,
+                    "health": 100,
+                    "score": 0,
+                    "dead": False,
+                    "ghost": False,
+                    "name": data.get("name", f"Player{player_id}"),
+                    "spawned": True
+                }
+                
+                print(f"✅ Player {player_id} spawned at ({players[player_id]['x']}, {players[player_id]['y']})")
+                
+                await websocket.send(json.dumps({
+                    "type": "init",
+                    "id": player_id,
+                    "x": players[player_id]["x"],
+                    "y": players[player_id]["y"],
+                    "health": 100,
+                    "leaderboard": [{"id": pid, "score": p["score"], "name": p.get("name", f"Player{pid}")} 
+                                    for pid, p in sorted(players.items(), key=lambda x: x[1]["score"], reverse=True)[:10]]
+                }))
+                
+                await broadcast_leaderboard()
+                
+            elif data["type"] == "move":
+                if player_id in players and players[player_id].get("spawned", False):
+                    if not players[player_id].get("dead", False) or players[player_id].get("ghost", False):
+                        players[player_id]["x"] = data["x"]
+                        players[player_id]["y"] = data["y"]
+                        players[player_id]["angle"] = data["angle"]
+                    else:
+                        await websocket.send(json.dumps({
+                            "type": "position_correction",
+                            "x": players[player_id]["x"],
+                            "y": players[player_id]["y"]
+                        }))
             
             elif data["type"] == "set_name":
-                players[player_id]["name"] = data["name"][:15]
+                if player_id in players:
+                    players[player_id]["name"] = data["name"][:15]
                 await broadcast_leaderboard()
             
             elif data["type"] == "chat":
@@ -714,26 +1311,25 @@ async def handle_client(websocket):
                 chat_message = json.dumps({
                     "type": "chat",
                     "playerId": player_id,
-                    "playerName": players[player_id].get("name", f"Player{player_id}"),
+                    "playerName": players[player_id].get("name", f"Player{player_id}") if player_id in players else f"Player{player_id}",
                     "message": data["message"]
                 })
                 
                 await asyncio.gather(*(client.send(chat_message) for client in clients))
                 
             elif data["type"] == "shoot":
-                # Ghosts cannot shoot
-                if not players[player_id].get("ghost", False) and not players[player_id].get("dead", False):
+                if player_id in players and not players[player_id].get("ghost", False) and not players[player_id].get("dead", False):
                     bullet = data["bullet"]
                     bullet["owner"] = player_id
                     bullet["createdAt"] = time.time()
                     bullets.append(bullet)
                 
             elif data["type"] == "spawn_enemy":
-                enemies.append(data["enemy"])
+                if player_id in players:
+                    enemies.append(data["enemy"])
                 
             elif data["type"] == "request_respawn":
                 if player_id in players and players[player_id].get("ghost", False):
-                    # Respawn the player
                     players[player_id]["x"] = random.randint(100, 1900)
                     players[player_id]["y"] = random.randint(100, 1900)
                     players[player_id]["health"] = 100
@@ -743,7 +1339,6 @@ async def handle_client(websocket):
                     
                     print(f"🔄 Player {player_id} respawned")
                     
-                    # Broadcast respawn to all clients
                     respawn_msg = json.dumps({
                         "type": "respawn",
                         "playerId": player_id,
@@ -758,16 +1353,52 @@ async def handle_client(websocket):
                 if player_id in players:
                     players[player_id]["ghost"] = data["ghost"]
                     print(f"Player {player_id} ghost mode: {data['ghost']}")
+
+            elif data["type"] == "hello_menu":
+                pass
+            elif data["type"] == "spawn_boss":
+                if player_id in players:
+                    boss = data["boss"]
+                    enemies.append(boss)
+                    
+                    boss_msg = json.dumps({
+                        "type": "boss_spawn",
+                        "wave": wave_number
+                    })
+                    await asyncio.gather(*(client.send(boss_msg) for client in clients), return_exceptions=True)
+                    
+                    print(f"👑 Player {player_id} spawned a boss!")
             
     except websockets.exceptions.ConnectionClosed:
         print(f"Player {player_id} disconnected")
-        await broadcast_leaderboard()
-    finally:
         if player_id in players:
             del players[player_id]
+        await broadcast_leaderboard()
+    finally:
         clients.remove(websocket)
-        # Remove player's bullets
+        if player_id in players:
+            del players[player_id]
+            print(f"✅ Player {player_id} removed from game")
+
         bullets[:] = [b for b in bullets if b.get("owner") != player_id]
+
+        await broadcast_leaderboard()
+
+        player_count_msg = json.dumps({
+            "type": "player_count",
+            "count": len(players)
+        })
+        await asyncio.gather(*(client.send(player_count_msg) for client in clients), return_exceptions=True)
+
+async def broadcast_player_count():
+    while True:
+        await asyncio.sleep(1)
+        if clients:
+            player_count_msg = json.dumps({
+                "type": "player_count",
+                "count": len(players)
+            })
+            await asyncio.gather(*(client.send(player_count_msg) for client in clients), return_exceptions=True)
 
 async def broadcast_updates():
     while True:
@@ -786,13 +1417,14 @@ async def broadcast_updates():
                     "dead": p.get("dead", False),
                     "name": p.get("name", f"Player{pid}")
                 }
-            
+
             game_update = json.dumps({
                 "type": "update",
                 "players": broadcast_players,
                 "enemies": enemies,
                 "bullets": bullets,
-                "enemy_bullets": enemy_bullets
+                "enemy_bullets": enemy_bullets,
+                "is_menu_preview": True 
             })
             await asyncio.gather(*(client.send(game_update) for client in clients), return_exceptions=True)
 
@@ -808,9 +1440,10 @@ async def main():
     asyncio.create_task(move_bullets())
     asyncio.create_task(wave_manager())
     asyncio.create_task(boss_attacks())
-    asyncio.create_task(enemy_shooters())
     asyncio.create_task(broadcast_updates())
     asyncio.create_task(move_enemy_bullets())
+    asyncio.create_task(broadcast_player_count())
+    asyncio.create_task(handle_enemy_shooting())
     
     async with websockets.serve(handle_client, "0.0.0.0", port):
         print(f"✅ WebSocket server started on port {port}")
@@ -818,5 +1451,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
