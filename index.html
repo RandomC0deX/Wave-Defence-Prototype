@@ -818,6 +818,16 @@
         // Canvas setup
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        
+        // OPTIMIZATION: Throttle resize events
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }, 100);
+        });
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
         canvas.setAttribute('tabindex', '0');
@@ -914,6 +924,20 @@
         // FPS
         let frameCount = 0;
         let lastFpsUpdate = performance.now();
+
+        // OPTIMIZATION: Object pools for frequent allocations
+        const bulletPool = [];
+        const MAX_POOL_SIZE = 100;
+        
+        function getBulletFromPool() {
+            return bulletPool.pop() || {};
+        }
+        
+        function returnBulletToPool(bullet) {
+            if (bulletPool.length < MAX_POOL_SIZE) {
+                bulletPool.push(bullet);
+            }
+        }
 
         // Show connecting state immediately
         document.getElementById('stateDisplay').classList.remove('hidden');
@@ -1717,6 +1741,59 @@
             
             debug('💀 Spawned a boss!');
         }
+
+        // OPTIMIZATION: Cache DOM elements
+        const domElements = {
+            hpBarFill: document.getElementById('hpBarFill'),
+            hpText: document.getElementById('hpText'),
+            score: document.getElementById('Score'),
+            playerName: document.getElementById('playerName'),
+            waveDisplay: document.getElementById('waveDisplay'),
+            enemyCount: document.getElementById('enemyCount'),
+            respawnScreen: document.getElementById('respawnScreen'),
+            mainMenu: document.getElementById('mainMenu'),
+            stateDisplay: document.getElementById('stateDisplay'),
+            fps: document.getElementById('fps'),
+            debug: document.getElementById('debug')
+        };
+
+        // OPTIMIZATION: Batch DOM updates
+        let pendingDOMUpdates = false;
+        let cachedHealth = 100;
+        let cachedScore = 0;
+        let cachedPlayerName = '';
+        let cachedWaveDisplay = '';
+        let cachedEnemyCount = 0;
+
+        function queueDOMUpdate() {
+            if (!pendingDOMUpdates) {
+                pendingDOMUpdates = true;
+                requestAnimationFrame(() => {
+                    if (cachedHealth !== undefined) {
+                        domElements.hpBarFill.style.width = cachedHealth + '%';
+                        domElements.hpText.textContent = cachedHealth + '/100';
+                    }
+                    if (cachedScore !== undefined) {
+                        domElements.score.textContent = `Score: ${cachedScore}`;
+                    }
+                    if (cachedPlayerName !== undefined) {
+                        domElements.playerName.textContent = cachedPlayerName;
+                    }
+                    if (cachedWaveDisplay !== undefined) {
+                        domElements.waveDisplay.innerHTML = cachedWaveDisplay;
+                    }
+                    if (cachedEnemyCount !== undefined) {
+                        domElements.enemyCount.innerHTML = `Enemies: ${cachedEnemyCount}`;
+                    }
+                    pendingDOMUpdates = false;
+                });
+            }
+        }
+
+        // OPTIMIZATION: Pre-allocate arrays for drawing
+        const visibleEnemies = [];
+        const visibleBullets = [];
+        const visibleEnemyBullets = [];
 
         // Drawing Functions
         function drawPlayer(x, y, color, isMe, angle, mouseX, mouseY, size = 20) {
@@ -2650,7 +2727,7 @@
 
             frameCount++;
             if (nowPerf - lastFpsUpdate >= 1000) {
-                document.getElementById('fps').innerHTML = `FPS: ${frameCount}`;
+                domElements.fps.innerHTML = `FPS: ${frameCount}`;
                 frameCount = 0;
                 lastFpsUpdate = nowPerf;
             }
