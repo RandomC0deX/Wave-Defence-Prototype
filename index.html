@@ -1429,6 +1429,46 @@
             }
         });
 
+        function updateAimJoystick(touch) {
+            const aimStick = document.getElementById('aimJoystick');
+            const aimHandle = document.getElementById('aimHandle');
+            
+            if (!aimStick || !aimHandle) return;
+            
+            const rect = aimStick.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            let dx = touch.clientX - centerX;
+            let dy = touch.clientY - centerY;
+            const distance = Math.hypot(dx, dy);
+            const maxDistance = rect.width / 2;
+            
+            if (distance > maxDistance) {
+                dx = (dx / distance) * maxDistance;
+                dy = (dy / distance) * maxDistance;
+            }
+            
+            aimJoystick.angle = Math.atan2(dy, dx);
+            aimJoystick.force = Math.min(distance / maxDistance, 1);
+            aimJoystick.x = dx;
+            aimJoystick.y = dy;
+            
+            aimHandle.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+        }
+
+        function resetJoystick() {
+            const aimHandle = document.getElementById('aimHandle');
+            if (aimHandle) {
+                aimHandle.style.transform = 'translate(-50%, -50%)';
+            }
+            aimJoystick.active = false;
+            aimJoystick.force = 0;
+            aimJoystick.x = 0;
+            aimJoystick.y = 0;
+            aimJoystick.angle = 0;
+        }
+
         function initMobileControls() {
             if (!isMobile) {
                 document.getElementById('mobileControls').style.display = 'none';
@@ -1494,19 +1534,17 @@
                 aimJoystick.active = true;
                 updateAimJoystick(e.touches[0]);
             });
-            
+
             aimStick.addEventListener('touchmove', (e) => {
                 e.preventDefault();
                 if (aimJoystick.active) {
                     updateAimJoystick(e.touches[0]);
                 }
             });
-            
+
             aimStick.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                aimJoystick.active = false;
-                aimJoystick.force = 0;
-                aimHandle.style.transform = 'translate(-50%, -50%)';
+                resetJoystick(); 
                 
                 if (isFiring) {
                     isFiring = false;
@@ -1515,6 +1553,11 @@
                         fireInterval = null;
                     }
                 }
+            });
+
+            aimStick.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                resetJoystick();  
             });
 
             const shootBtn = document.getElementById('mobileShootBtn');
@@ -1552,12 +1595,24 @@
         function handleMobileMovement(deltaTime) {
             if (!isMobile) return;
             
-            const moveAmount = SPEED * (deltaTime || 0.016); 
+            const moveAmount = SPEED * (deltaTime || 0.016);
             
-            if (mobileMovement.up) myY -= moveAmount;
-            if (mobileMovement.down) myY += moveAmount;
-            if (mobileMovement.left) myX -= moveAmount;
-            if (mobileMovement.right) myX += moveAmount;
+            let moveX = 0;
+            let moveY = 0;
+            
+            if (mobileMovement.up) moveY -= 1;
+            if (mobileMovement.down) moveY += 1;
+            if (mobileMovement.left) moveX -= 1;
+            if (mobileMovement.right) moveX += 1;
+
+            if (moveX !== 0 && moveY !== 0) {
+                const length = Math.sqrt(moveX * moveX + moveY * moveY);
+                moveX /= length;
+                moveY /= length;
+            }
+
+            myX += moveX * moveAmount;
+            myY += moveY * moveAmount;
 
             if (aimJoystick.active && aimJoystick.force > 0.1) {
                 playerAngle = aimJoystick.angle;
