@@ -308,7 +308,7 @@
             50% { opacity: 0.3; }
         }
 
-                #mobileControls {
+        #mobileControls {
             position: fixed;
             bottom: 0;
             left: 0;
@@ -317,6 +317,12 @@
             pointer-events: none;
             z-index: 5000;
             display: none;
+        }
+
+        /* Hide joysticks when main menu is visible */
+        .main-menu-visible #mobileControls,
+        body:has(#mainMenu[style*="display: flex"]) #mobileControls {
+            display: none !important;
         }
 
         @media (max-width: 768px) {
@@ -373,10 +379,11 @@
             display: none !important;
         }
 
+        /* Joystick styles - symmetrical and properly sized for mobile */
         .left-joystick, .right-joystick {
             position: absolute;
-            width: 140px;
-            height: 140px;
+            width: 110px;
+            height: 110px;
             background: rgba(255, 255, 255, 0.15);
             border: 3px solid rgba(128, 128, 128, 0.6);
             border-radius: 50%;
@@ -386,38 +393,37 @@
             justify-content: center;
             pointer-events: auto;
             box-shadow: 0 0 20px rgba(128, 128, 128, 0.3);
+            bottom: 30px;
         }
 
         .left-joystick {
-            bottom: 40px;
-            left: 40px;
+            left: 30px;
         }
 
         .right-joystick {
-            bottom: 40px;
-            right: 40px;
+            right: 30px;
         }
 
         #rightControls {
             position: absolute;
-            bottom: 40px;
-            right: 40px;
+            bottom: 30px;
+            right: 30px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
+            gap: 15px;
             pointer-events: none;
         }
 
         .joystick-handle {
-            width: 60px;
-            height: 60px;
+            width: 50px;
+            height: 50px;
             background: rgba(128, 128, 128, 0.9);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 20px;
             color: white;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
@@ -459,60 +465,60 @@
             opacity: 1;
         }
 
-        @media (max-width: 768px) {
-            .left-joystick, .right-joystick {
-                width: 120px;
-                height: 120px;
-            }
-
-            .joystick-handle {
-                width: 50px;
-                height: 50px;
-                font-size: 20px;
-            }
-        }
-
+        /* Responsive sizes for smaller phones */
         @media (max-width: 480px) {
+            .left-joystick, .right-joystick {
+                width: 90px;
+                height: 90px;
+                bottom: 20px;
+            }
+
             .left-joystick {
                 left: 20px;
-                bottom: 20px;
-                width: 100px;
-                height: 100px;
             }
 
             .right-joystick {
                 right: 20px;
-                bottom: 20px;
-                width: 100px;
-                height: 100px;
-            }
-
-            .joystick-handle {
-                width: 45px;
-                height: 45px;
-                font-size: 18px;
-            }
-        }
-
-        @media (max-width: 768px) and (orientation: landscape) {
-            .left-joystick {
-                left: 20px;
-                bottom: 20px;
-                width: 90px;
-                height: 90px;
-            }
-
-            .right-joystick {
-                right: 20px;
-                bottom: 20px;
-                width: 90px;
-                height: 90px;
             }
 
             .joystick-handle {
                 width: 40px;
                 height: 40px;
+                font-size: 18px;
+            }
+
+            #rightControls {
+                bottom: 20px;
+                right: 20px;
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 768px) and (orientation: landscape) {
+            .left-joystick, .right-joystick {
+                width: 80px;
+                height: 80px;
+                bottom: 15px;
+            }
+
+            .left-joystick {
+                left: 15px;
+            }
+
+            .right-joystick {
+                right: 15px;
+            }
+
+            .joystick-handle {
+                width: 35px;
+                height: 35px;
                 font-size: 16px;
+            }
+
+            #rightControls {
+                bottom: 15px;
+                right: 15px;
+                gap: 10px;
             }
         }
 
@@ -660,11 +666,12 @@
             display: none;
         }
         
+        /* Scaled down chat for mobile */
         #chatContainer {
             position: fixed;
-            bottom: 10px;
-            left: 10px;
-            width: 300px;
+            bottom: 15px;
+            left: 15px;
+            width: 250px;
             background: rgba(0,0,0,0.1);
             border: none;
             border-radius: 5px;
@@ -672,23 +679,23 @@
             transition: all 0.2s ease;
             overflow: hidden;
         }
-        
+
         #chatContainer.collapsed {
-            height: 36px;
-            width: 120px;
+            height: 32px;
+            width: 100px;
         }
-        
+
         #chatContainer:not(.collapsed) {
             height: auto;
-            max-height: 300px;
+            max-height: 250px;
             min-height: 100px;
             overflow: hidden;
         }
-        
+
         #chatHeader {
             background: rgba(0,0,0,0.1);
             color: #4CAF50;
-            padding: 8px 12px;
+            padding: 6px 10px;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
@@ -696,28 +703,29 @@
             font-weight: bold;
             user-select: none;
             height: 20px;
+            font-size: 14px;
         }
-        
+
         #chatHeader:hover {
             background: rgba(0,0,0,0.3);
         }
-        
+
         #chatToggleIcon {
             font-size: 12px;
             transition: transform 0.2s ease;
         }
-        
+
         #chatContainer.collapsed #chatToggleIcon {
             transform: rotate(-90deg);
         }
-        
+
         #chatMessages {
-            max-height: calc(100% - 50px);
+            max-height: 150px;
             overflow-y: auto;
-            padding: 8px;
+            padding: 6px;
             color: white;
             font-family: monospace;
-            font-size: 12px;
+            font-size: 11px;
             display: flex;
             flex-direction: column-reverse;
             border-bottom: 1px solid #444;
@@ -725,47 +733,47 @@
             word-wrap: break-word;      
             word-break: break-all;      
             white-space: normal;       
-            line-height: 1.4;      
+            line-height: 1.3;      
             overflow: hidden;     
         }
-        
+
         .chat-input-container {
             display: flex;
-            padding: 6px;
+            padding: 4px;
             background: rgba(0,0,0,0.2);
         }
-        
+
         #chatInput {
             flex-grow: 1;
             background: rgba(255,255,255,0.1);
             border: none;
             border-radius: 3px 0 0 3px;
             color: white;
-            padding: 6px;
+            padding: 5px;
             outline: none;
             font-family: monospace;
-            font-size: 12px;
+            font-size: 11px;
         }
-        
+
         #chatInput:focus {
             border-color: #6aff6a;
         }
-        
+
         #chatSend {
             background: #4CAF50;
             border: none;
             color: white;
-            padding: 6px 12px;
+            padding: 5px 10px;
             cursor: pointer;
             font-family: monospace;
-            font-size: 12px;
+            font-size: 11px;
             border-radius: 0 3px 3px 0;
         }
-        
+
         #chatSend:hover {
             background: #45a049;
         }
-        
+
         #chatContainer.collapsed #chatMessages,
         #chatContainer.collapsed .chat-input-container {
             display: none;
@@ -781,218 +789,150 @@
             100% { transform: translateY(0px); }
         }
 
-        /* Mobile UI Scaling */
+        /* Mobile UI Scaling for all elements */
         @media (max-width: 768px) {
             #playerName {
-                font-size: clamp(16px, 4vw, 24px);
-                bottom: 70px;
+                font-size: clamp(14px, 3.5vw, 20px);
+                bottom: 60px;
             }
 
             #waveInfo {
                 min-width: auto;
                 width: auto;
-                max-width: 200px;
-                padding: 8px 12px;
-                font-size: clamp(12px, 3vw, 16px);
+                max-width: 180px;
+                padding: 6px 10px;
+                font-size: clamp(11px, 2.5vw, 14px);
                 top: 5px;
             }
 
             #waveDisplay {
-                font-size: clamp(14px, 4vw, 18px);
+                font-size: clamp(12px, 3vw, 16px);
             }
 
             #enemyCount {
-                font-size: clamp(12px, 3.5vw, 14px);
+                font-size: clamp(10px, 2.5vw, 12px);
             }
 
             #leaderboard {
                 width: auto;
-                min-width: 120px;
-                max-width: 180px;
-                font-size: clamp(10px, 2.5vw, 12px);
+                min-width: 100px;
+                max-width: 150px;
+                font-size: clamp(9px, 2vw, 11px);
                 top: 5px;
                 right: 5px;
                 padding: 5px;
             }
 
             #hpBarContainer {
-                width: min(250px, 70vw);
-                height: 15px;
+                width: min(220px, 60vw);
+                height: 14px;
                 bottom: 10px;
             }
 
             #hpText {
-                font-size: clamp(10px, 2.5vw, 12px);
+                font-size: clamp(9px, 2vw, 11px);
             }
 
             #Score {
-                font-size: clamp(10px, 2.5vw, 12px);
-                bottom: 35px;
+                font-size: clamp(9px, 2vw, 11px);
+                bottom: 32px;
             }
 
             /* Scale menu for mobile */
             .menu-container {
                 min-width: auto;
                 width: 90%;
-                max-width: 400px;
-                padding: 30px 20px;
+                max-width: 380px;
+                padding: 25px 15px;
             }
 
             .game-title {
-                font-size: clamp(40px, 10vw, 60px);
-                margin-bottom: 30px;
+                font-size: clamp(36px, 8vw, 48px);
+                margin-bottom: 25px;
             }
 
             .menu-btn {
-                font-size: clamp(18px, 4vw, 22px);
-                padding: 12px 20px;
+                font-size: clamp(16px, 3.5vw, 20px);
+                padding: 10px 15px;
             }
 
             .play-btn {
-                font-size: clamp(24px, 5vw, 28px);
+                font-size: clamp(20px, 4.5vw, 24px);
             }
 
             .name-input-container {
                 flex-direction: column;
-                gap: 10px;
+                gap: 8px;
             }
 
             #playerNameInput {
                 width: 100%;
-                font-size: 16px;
-                padding: 10px;
+                font-size: 14px;
+                padding: 8px;
+                box-sizing: border-box;
             }
 
             .name-set-btn {
                 width: 100%;
-                padding: 10px;
-                font-size: 16px;
+                padding: 8px;
+                font-size: 14px;
             }
 
             .menu-footer {
-                font-size: 12px;
-            }
-
-            /* Scale chat for mobile */
-            #chatContainer {
-                width: min(200px, 40vw);
-                bottom: 5px;
-                left: 5px;
-            }
-
-            #chatContainer:not(.collapsed) {
-                width: min(250px, 60vw);
-            }
-
-            #chatContainer.collapsed {
-                width: min(80px, 20vw);
-                height: 30px;
-            }
-
-            #chatHeader {
-                padding: 5px 8px;
-                font-size: clamp(10px, 2.5vw, 12px);
-                height: 20px;
-            }
-
-            #chatMessages {
-                font-size: clamp(10px, 2vw, 11px);
-                padding: 5px;
-                max-height: 150px;
-            }
-
-            .chat-input-container {
-                padding: 4px;
-            }
-
-            #chatInput {
-                font-size: clamp(10px, 2vw, 11px);
-                padding: 4px;
-            }
-
-            #chatSend {
-                font-size: clamp(10px, 2vw, 11px);
-                padding: 4px 8px;
+                font-size: 11px;
+                padding-top: 15px;
             }
 
             /* Scale respawn screen for mobile */
             #respawnScreen .skull {
-                font-size: min(80px, 20vw);
+                font-size: min(70px, 18vw);
             }
 
             #respawnScreen .title {
-                font-size: min(48px, 12vw);
+                font-size: min(40px, 10vw);
             }
 
             #respawnScreen .wave-text {
-                font-size: min(24px, 6vw);
+                font-size: min(20px, 5vw);
             }
 
             #respawnScreen button {
-                font-size: min(32px, 8vw);
-                padding: min(15px, 4vw) min(40px, 10vw);
+                font-size: min(28px, 7vw);
+                padding: min(12px, 3vw) min(30px, 8vw);
             }
 
             #fps, #debug {
-                font-size: 10px;
-                padding: 3px 6px;
+                font-size: 9px;
+                padding: 3px 5px;
             }
 
             #debug {
-                max-width: min(200px, 40vw);
-            }
-
-            #dpad .dpad-container {
-                transform: scale(0.8);
-                transform-origin: bottom left;
-            }
-
-            #rightControls {
-                transform: scale(0.8);
-                transform-origin: bottom right;
-                gap: 15px;
-            }
-
-            .joystick {
-                width: 100px;
-                height: 100px;
-            }
-
-            .joystick-handle {
-                width: 40px;
-                height: 40px;
-                font-size: 16px;
-            }
-
-            .mobile-shoot-btn {
-                width: 70px;
-                height: 70px;
-                font-size: 30px;
+                max-width: min(180px, 35vw);
             }
         }
 
         @media (max-width: 400px) {
             #hpBarContainer {
-                width: min(200px, 60vw);
+                width: min(180px, 55vw);
                 height: 12px;
             }
 
             #hpText {
-                font-size: 9px;
+                font-size: 8px;
             }
 
             #playerName {
-                font-size: 14px;
-                bottom: 60px;
+                font-size: 12px;
+                bottom: 55px;
             }
 
             #Score {
-                font-size: 9px;
-                bottom: 30px;
+                font-size: 8px;
+                bottom: 28px;
             }
 
             #chatContainer:not(.collapsed) {
-                width: min(220px, 70vw);
+                width: min(200px, 65vw);
             }
 
             #chatMessages {
@@ -1002,82 +942,47 @@
 
         @media (max-width: 768px) and (orientation: landscape) {
             #hpBarContainer {
-                width: min(200px, 40vw);
+                width: min(180px, 35vw);
                 bottom: 5px;
             }
 
             #playerName {
-                bottom: 45px;
+                bottom: 40px;
             }
 
             #Score {
-                bottom: 25px;
+                bottom: 22px;
             }
 
             #chatContainer:not(.collapsed) {
-                max-height: 200px;
+                max-height: 180px;
             }
 
             #chatMessages {
-                max-height: 100px;
-            }
-
-            #dpad .dpad-container {
-                transform: scale(0.7);
-            }
-
-            #rightControls {
-                transform: scale(0.7);
-                gap: 10px;
-            }
-
-            .joystick {
-                width: 80px;
-                height: 80px;
-            }
-
-            .joystick-handle {
-                width: 35px;
-                height: 35px;
-            }
-
-            .mobile-shoot-btn {
-                width: 60px;
-                height: 60px;
-                font-size: 24px;
+                max-height: 90px;
             }
         }
 
+        /* Touch target sizing */
         @media (max-width: 768px) {
             .menu-btn, 
             .name-set-btn,
             #chatSend,
-            #dpad .dpad-btn,
-            .mobile-shoot-btn,
             .joystick-handle {
-                min-height: 44px; 
-                min-width: 44px;
+                min-height: 40px; 
+                min-width: 40px;
             }
 
             .menu-btn,
             #playerNameInput,
-            #chatInput,
-            #dpad .dpad-btn,
-            .mobile-shoot-btn {
+            #chatInput {
                 -webkit-touch-callout: none;
                 -webkit-user-select: none;
                 user-select: none;
             }
-
-            .menu-btn:active,
-            .name-set-btn:active,
-            #chatSend:active,
-            #dpad .dpad-btn:active,
-            .mobile-shoot-btn:active {
-                opacity: 0.7;
-            }
         }
 
+        /* Safe area support */
         @supports (padding: max(0px)) {
             #playerName {
                 bottom: max(55px, env(safe-area-inset-bottom));
@@ -1087,19 +992,14 @@
                 bottom: max(15px, env(safe-area-inset-bottom));
             }
 
-            #dpad {
-                bottom: max(30px, env(safe-area-inset-bottom));
-                left: max(30px, env(safe-area-inset-left));
-            }
-
             #rightControls {
                 bottom: max(30px, env(safe-area-inset-bottom));
                 right: max(30px, env(safe-area-inset-right));
             }
 
             #chatContainer {
-                bottom: max(10px, env(safe-area-inset-bottom));
-                left: max(10px, env(safe-area-inset-left));
+                bottom: max(15px, env(safe-area-inset-bottom));
+                left: max(15px, env(safe-area-inset-left));
             }
         }
 
@@ -1790,12 +1690,22 @@
             document.getElementById('mainMenu').style.display = 'none';
             document.body.classList.add('game-active');
             canvas.focus();
+            
+            // Show mobile controls when game starts
+            if (isMobile) {
+                document.getElementById('mobileControls').style.display = 'block';
+            }
         }
 
         function showMainMenu() {
             document.getElementById('mainMenu').style.display = 'flex';
             document.body.classList.remove('game-active');
             isInGame = false;
+            
+            // Hide mobile controls when main menu is visible
+            if (isMobile) {
+                document.getElementById('mobileControls').style.display = 'none';
+            }
             
             if (ws) {
                 ws.onmessage = handleMenuMessages;
@@ -1878,65 +1788,119 @@
                 return;
             }
             
-            document.getElementById('mobileControls').style.display = 'block';
+            // Only show if game is active (main menu not visible)
+            if (document.getElementById('mainMenu').style.display !== 'flex') {
+                document.getElementById('mobileControls').style.display = 'block';
+            }
             
             const movementStick = document.getElementById('movementJoystick');
             const movementHandle = document.getElementById('movementHandle');
             const aimStick = document.getElementById('aimJoystick');
             const aimHandle = document.getElementById('aimHandle');
 
+            // Track touch identifiers to prevent interference
+            let movementTouchId = null;
+            let aimTouchId = null;
+
             movementStick.addEventListener('touchstart', (e) => {
                 e.preventDefault();
+                const touch = e.touches[0];
+                movementTouchId = touch.identifier;
                 movementJoystick.active = true;
                 movementStick.classList.add('active');
-                updateMovementJoystick(e.touches[0]);
+                updateMovementJoystick(touch);
             });
 
             movementStick.addEventListener('touchmove', (e) => {
                 e.preventDefault();
-                if (movementJoystick.active) {
-                    updateMovementJoystick(e.touches[0]);
+                // Find the correct touch by identifier
+                for (let i = 0; i < e.touches.length; i++) {
+                    const touch = e.touches[i];
+                    if (touch.identifier === movementTouchId) {
+                        if (movementJoystick.active) {
+                            updateMovementJoystick(touch);
+                        }
+                        break;
+                    }
                 }
             });
 
             movementStick.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                resetMovementJoystick();
-                movementStick.classList.remove('active');
+                // Check if our tracked touch ended
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const touch = e.changedTouches[i];
+                    if (touch.identifier === movementTouchId) {
+                        resetMovementJoystick();
+                        movementStick.classList.remove('active');
+                        movementTouchId = null;
+                        break;
+                    }
+                }
             });
 
             movementStick.addEventListener('touchcancel', (e) => {
                 e.preventDefault();
-                resetMovementJoystick();
-                movementStick.classList.remove('active');
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const touch = e.changedTouches[i];
+                    if (touch.identifier === movementTouchId) {
+                        resetMovementJoystick();
+                        movementStick.classList.remove('active');
+                        movementTouchId = null;
+                        break;
+                    }
+                }
             });
 
             aimStick.addEventListener('touchstart', (e) => {
                 e.preventDefault();
+                const touch = e.touches[0];
+                aimTouchId = touch.identifier;
                 aimJoystick.active = true;
                 aimStick.classList.add('active');
-                updateAimJoystick(e.touches[0]);
+                updateAimJoystick(touch);
             });
 
             aimStick.addEventListener('touchmove', (e) => {
                 e.preventDefault();
-                if (aimJoystick.active) {
-                    updateAimJoystick(e.touches[0]);
+                // Find the correct touch by identifier
+                for (let i = 0; i < e.touches.length; i++) {
+                    const touch = e.touches[i];
+                    if (touch.identifier === aimTouchId) {
+                        if (aimJoystick.active) {
+                            updateAimJoystick(touch);
+                        }
+                        break;
+                    }
                 }
             });
 
             aimStick.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                resetAimJoystick();
-                aimStick.classList.remove('active');
+                // Check if our tracked touch ended
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const touch = e.changedTouches[i];
+                    if (touch.identifier === aimTouchId) {
+                        resetAimJoystick();
+                        aimStick.classList.remove('active');
+                        aimTouchId = null;
+                        break;
+                    }
+                }
             });
 
             aimStick.addEventListener('touchcancel', (e) => {
                 e.preventDefault();
-                resetAimJoystick();
-                aimStick.classList.remove('active');
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const touch = e.changedTouches[i];
+                    if (touch.identifier === aimTouchId) {
+                        resetAimJoystick();
+                        aimStick.classList.remove('active');
+                        aimTouchId = null;
+                        break;
+                    }
+                }
             });
-
         }
 
         function updateMovementJoystick(touch) {
