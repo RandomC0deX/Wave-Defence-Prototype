@@ -898,7 +898,7 @@
         document.getElementById('mainMenu').style.display = 'none';
 
         // Create connection and set up handlers immediately
-        ws = new WebSocket('ws://localhost:10000');
+        ws = new WebSocket('wss://ran.taila641d5.ts.net');
 
         ws.onopen = () => {
             debug('✅ Connected to server');
@@ -2513,3 +2513,4 @@
     </script>
 </body>
 </html>
+
