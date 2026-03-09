@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>WAVE DEFENCE PROTOTYPE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <style>
         body {
             margin: 0;
@@ -456,6 +457,30 @@
                 opacity: 0.7;
             }
         }
+
+        @media (max-width: 768px) {
+            #gameCanvas {
+                width: 100vw;
+                height: 100vh;
+                object-fit: cover; 
+            }
+
+            body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+                background: #1a1a2e;
+            }
+
+            canvas {
+                display: block;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+            }
+        }
         
         #leaderboard {
             position: fixed;
@@ -819,6 +844,7 @@
         let isGhost = false;
         const GHOST_ALPHA = 0.5;
         let isInGame = false;
+        let playerAngle = 0;
 
         // Movement
         const SPEED = 110;
@@ -866,7 +892,7 @@
         let enemies = [];
         const ENEMY_SIZE = 18;
         const ENEMY_SPEED = 1.5;
-        const ENEMY_HEALTH = 3;
+        const ENEMY_HEALTH = 20;
 
         // Interpolation
         let interpolatedEnemies = [];
@@ -920,21 +946,17 @@
             try {
                 const data = JSON.parse(event.data);
                 
-                // Always process these message types regardless of menu state
                 if (data.type === 'player_count') {
                     updateOnlineCount(data.count);
                 }
                 if (data.type === 'leaderboard') {
                     updateLeaderboardDisplay(data.leaderboard);
                 }
-                
-                // Route based on game state
+
                 if (isInGame) {
                     handleWebSocketMessage(event);
                 } else {
-                    // In menu mode - handle menu messages including preview updates
                     if (data.type === 'update' && data.is_menu_preview) {
-                        // Store game state for rendering preview
                         enemies = data.enemies || [];
                         players = data.players || {};
                         enemy_bullets = data.enemy_bullets || []; 
@@ -945,7 +967,6 @@
                         updateEnemyInterpolation(data.enemies || []);
                         updateEnemyBulletInterpolation(enemy_bullets);
                         
-                        // Update menu camera to follow action
                         if (Object.keys(players).length > 0) {
                             let avgX = 0, avgY = 0, count = 0;
                             for (let id in players) {
@@ -1409,17 +1430,18 @@
         });
 
         function initMobileControls() {
-            if (!isMobile) return;
+            if (!isMobile) {
+                document.getElementById('mobileControls').style.display = 'none';
+                return;
+            }
             
             document.getElementById('mobileControls').style.display = 'block';
             
-            // D-Pad buttons
             const dpadUp = document.getElementById('dpadUp');
             const dpadDown = document.getElementById('dpadDown');
             const dpadLeft = document.getElementById('dpadLeft');
             const dpadRight = document.getElementById('dpadRight');
             
-            // Touch start handlers
             dpadUp.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 mobileMovement.up = true;
@@ -1464,7 +1486,6 @@
                 dpadRight.classList.remove('active');
             });
             
-            // Aim joystick
             const aimStick = document.getElementById('aimJoystick');
             const aimHandle = document.getElementById('aimHandle');
             
@@ -1486,19 +1507,40 @@
                 aimJoystick.active = false;
                 aimJoystick.force = 0;
                 aimHandle.style.transform = 'translate(-50%, -50%)';
+                
+                if (isFiring) {
+                    isFiring = false;
+                    if (fireInterval) {
+                        clearInterval(fireInterval);
+                        fireInterval = null;
+                    }
+                }
             });
-            
-            // Shoot button
+
             const shootBtn = document.getElementById('mobileShootBtn');
+            
             shootBtn.addEventListener('touchstart', (e) => {
                 e.preventDefault();
-                if (!isGhost) {
+                e.stopPropagation();
+                if (!isGhost && myId && isConnected) {
                     isFiring = true;
                     startFiring();
                 }
             });
+            
             shootBtn.addEventListener('touchend', (e) => {
                 e.preventDefault();
+                e.stopPropagation();
+                isFiring = false;
+                if (fireInterval) {
+                    clearInterval(fireInterval);
+                    fireInterval = null;
+                }
+            });
+            
+            shootBtn.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 isFiring = false;
                 if (fireInterval) {
                     clearInterval(fireInterval);
@@ -1507,33 +1549,10 @@
             });
         }
 
-        function updateAimJoystick(touch) {
-            const aimStick = document.getElementById('aimJoystick');
-            const aimHandle = document.getElementById('aimHandle');
-            const rect = aimStick.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            
-            let dx = touch.clientX - centerX;
-            let dy = touch.clientY - centerY;
-            const distance = Math.hypot(dx, dy);
-            const maxDistance = rect.width / 2;
-            
-            if (distance > maxDistance) {
-                dx = (dx / distance) * maxDistance;
-                dy = (dy / distance) * maxDistance;
-            }
-            
-            aimJoystick.force = Math.min(distance / maxDistance, 1);
-            aimJoystick.angle = Math.atan2(dy, dx);
-            
-            aimHandle.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-        }
-
-        function handleMobileMovement() {
+        function handleMobileMovement(deltaTime) {
             if (!isMobile) return;
             
-            const moveAmount = SPEED * (deltaTime || 0.016);
+            const moveAmount = SPEED * (deltaTime || 0.016); 
             
             if (mobileMovement.up) myY -= moveAmount;
             if (mobileMovement.down) myY += moveAmount;
@@ -1570,9 +1589,11 @@
                         let worldX, worldY;
                         
                         if (isMobile && aimJoystick.active) {
+                            // Use joystick angle for mobile
                             worldX = myX + Math.cos(aimJoystick.angle) * 100;
                             worldY = myY + Math.sin(aimJoystick.angle) * 100;
                         } else {
+                            // Use mouse for desktop
                             const rect = canvas.getBoundingClientRect();
                             worldX = lastMouseX - rect.left + cameraX;
                             worldY = lastMouseY - rect.top + cameraY;
@@ -1591,7 +1612,7 @@
                                 vy: (dy / distance) * BULLET_SPEED,
                                 owner: myId,
                                 damage: DAMAGE,
-                                createdAt: Date.now(),
+                                createdAt: now,
                                 size: BULLET_SIZE,
                                 color: '#ffff00'
                             };
@@ -1737,8 +1758,14 @@
                     existingEnemy.targetX = newEnemy.x;
                     existingEnemy.targetY = newEnemy.y;
                     existingEnemy.targetHealth = newEnemy.health;
+                    existingEnemy.targetColor = newEnemy.color; 
                     existingEnemy.healthBarOpacity = 1;
                     existingEnemy.deathAnimation = null;
+
+                    if (existingEnemy.currentColor === undefined) {
+                        existingEnemy.currentColor = newEnemy.color;
+                    }
+
                 } else {
                     interpolatedEnemies.push({
                         ...newEnemy,
@@ -1747,6 +1774,8 @@
                         targetX: newEnemy.x,
                         targetY: newEnemy.y,
                         targetHealth: newEnemy.health,
+                        targetColor: newEnemy.color,
+                        currentColor: newEnemy.color, 
                         healthBarOpacity: 1,
                         deathAnimation: null
                     });
@@ -1781,12 +1810,35 @@
         }
 
         function interpolateEnemies() {
-            const factor = 0.2;
+            const factor = 0.2; 
+            const colorFactor = 0.05; 
+            
             for (let enemy of interpolatedEnemies) {
                 if (enemy.targetX !== undefined) {
                     enemy.renderX += (enemy.targetX - enemy.renderX) * factor;
                     enemy.renderY += (enemy.targetY - enemy.renderY) * factor;
                     enemy.health += (enemy.targetHealth - enemy.health) * factor;
+                    
+                    if (enemy.targetColor && enemy.currentColor !== enemy.targetColor) {
+                        enemy.currentColor = interpolateColor(
+                            enemy.currentColor, 
+                            enemy.targetColor, 
+                            colorFactor
+                        );
+                        
+                        if (enemy.currentColor === enemy.targetColor || 
+                            Math.random() < 0.01) {
+                            const colorDiff = Math.abs(
+                                parseInt(enemy.currentColor.substring(1), 16) - 
+                                parseInt(enemy.targetColor.substring(1), 16)
+                            );
+                            if (colorDiff < 1000) {
+                                enemy.currentColor = enemy.targetColor;
+                            }
+                        }
+                    }
+
+                    enemy.color = enemy.currentColor || enemy.targetColor || '#8B0000';
                 }
             }
         }
@@ -1862,6 +1914,13 @@
                     existingBullet.targetY = newBullet.y;
                     existingBullet.color = newBullet.color;
                     existingBullet.size = newBullet.size;
+                    existingBullet.damage = newBullet.damage;
+                    existingBullet.pattern = newBullet.pattern;
+                    existingBullet.infinite_range = newBullet.infinite_range || false;
+                    existingBullet.maxLifetime = newBullet.maxLifetime;
+                    existingBullet.shrinkStart = newBullet.shrinkStart;
+                    existingBullet.boss_phase = newBullet.boss_phase;
+                    
                     if (!existingBullet.createdAt) {
                         existingBullet.createdAt = now;
                     }
@@ -1872,8 +1931,10 @@
                         renderY: newBullet.y,
                         targetX: newBullet.x,
                         targetY: newBullet.y,
-                        createdAt: now, 
-                        maxLifetime: 3000 
+                        createdAt: now,
+                        infinite_range: newBullet.infinite_range || false,
+                        maxLifetime: newBullet.maxLifetime,
+                        shrinkStart: newBullet.shrinkStart
                     });
                 }
             }
@@ -1935,6 +1996,24 @@
                     bullet.renderY += (bullet.targetY - bullet.renderY) * factor;
                 }
             }
+        }
+
+        function interpolateColor(color1, color2, factor) {
+            if (!color1 || !color2) return color2 || color1 || '#FFD700';
+            
+            const r1 = parseInt(color1.substring(1,3), 16);
+            const g1 = parseInt(color1.substring(3,5), 16);
+            const b1 = parseInt(color1.substring(5,7), 16);
+            
+            const r2 = parseInt(color2.substring(1,3), 16);
+            const g2 = parseInt(color2.substring(3,5), 16);
+            const b2 = parseInt(color2.substring(5,7), 16);
+            
+            const r = Math.round(r1 + (r2 - r1) * factor);
+            const g = Math.round(g1 + (g2 - g1) * factor);
+            const b = Math.round(b1 + (b2 - b1) * factor);
+
+            return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
         }
 
         window.requestRespawn = function() {
@@ -2079,7 +2158,21 @@
             }
         });
 
-        // Game Loop
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                ctx.fillStyle = '#1a1a2e';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }, 100);
+        });
+
+        setTimeout(() => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            console.log('Initial canvas size:', canvas.width, 'x', canvas.height);
+        }, 100);
+
         function gameLoop() {
 
             if (cameraX === 0 && cameraY === 0 && myId) {
@@ -2100,8 +2193,6 @@
 
             const mouseWorldX = mouseScreenX + cameraX;
             const mouseWorldY = mouseScreenY + cameraY;
-
-            let playerAngle = 0;
             const now = Date.now();
 
             if (myId) {
@@ -2148,7 +2239,7 @@
                 if (keys['d'] || keys['ArrowRight'] || keys['D']) myX += moveAmount;
                 
                 if (isMobile) {
-                    handleMobileMovement();
+                    handleMobileMovement(deltaTime);
                 }
                 
                 myX = Math.max(20, Math.min(WORLD_WIDTH - 20, myX));
@@ -2465,17 +2556,29 @@
 
             for (let b of interpolatedEnemyBullets) {
                 const now = performance.now();
-                const age = now - (b.createdAt || now);
-                const maxLifetime = b.maxLifetime || 3000;
                 
-                let shrinkFactor = 1.0;
-                if (age > maxLifetime * 0.7) {
-                    shrinkFactor = 1.0 - ((age - maxLifetime * 0.7) / (maxLifetime * 0.3));
-                    shrinkFactor = Math.max(0, Math.min(1, shrinkFactor));
+                let currentSize = b.size || 8;
+                let currentAlpha = 1.0;
+                
+                if (!b.infinite_range && b.maxLifetime) {
+                    const age = now - (b.createdAt || now);
+                    const shrinkStart = b.shrinkStart || 0.7; 
+                    
+                    if (age > b.maxLifetime * shrinkStart) {
+                        const shrinkDuration = b.maxLifetime * (1 - shrinkStart);
+                        const shrinkAge = age - (b.maxLifetime * shrinkStart);
+                        let shrinkFactor = 1.0 - (shrinkAge / shrinkDuration);
+                        shrinkFactor = Math.max(0, Math.min(1, shrinkFactor));
+                        
+                        currentSize = (b.size || 8) * shrinkFactor;
+                        currentAlpha = shrinkFactor;
+                    }
+                    
+                    if (age > b.maxLifetime * 0.9 && currentSize > 1) {
+                        const pulse = Math.sin(age * 0.05) * 0.2 + 0.8;
+                        currentSize *= pulse;
+                    }
                 }
-                
-                const currentSize = (b.size || 8) * shrinkFactor;
-                const currentAlpha = shrinkFactor;
                 
                 if (currentSize > 0.5) {
                     ctx.globalAlpha = currentAlpha;
@@ -2483,7 +2586,7 @@
                     ctx.beginPath();
                     ctx.arc(b.renderX, b.renderY, currentSize, 0, Math.PI * 2);
                     ctx.fill();
-
+                    
                     ctx.globalAlpha = 1;
                 }
             }
@@ -2502,15 +2605,9 @@
 
         gameLoop();
 
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
-
         window.ws = ws;
         window.myId = myId;
         window.players = players;
     </script>
 </body>
 </html>
-
