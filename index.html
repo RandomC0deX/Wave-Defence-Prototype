@@ -329,35 +329,73 @@
             }
         }
 
-        .left-joystick {
+        .fullscreen-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 25px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 24px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10001;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .fullscreen-btn:hover {
+            background: rgba(76, 175, 80, 0.8);
+            border-color: #4CAF50;
+            transform: scale(1.1);
+        }
+
+        .fullscreen-btn:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width: 768px) {
+            .fullscreen-btn {
+                display: flex;
+            }
+        }
+
+        :-webkit-full-screen .fullscreen-btn,
+        :-moz-full-screen .fullscreen-btn,
+        :fullscreen .fullscreen-btn {
+            display: none !important;
+        }
+
+        .left-joystick, .right-joystick {
             position: absolute;
-            bottom: 40px;
-            left: 40px;
             width: 140px;
             height: 140px;
             background: rgba(255, 255, 255, 0.15);
-            border: 3px solid rgba(76, 175, 80, 0.6);
+            border: 3px solid rgba(128, 128, 128, 0.6);
             border-radius: 50%;
             backdrop-filter: blur(8px);
             display: flex;
             align-items: center;
             justify-content: center;
             pointer-events: auto;
-            box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+            box-shadow: 0 0 20px rgba(128, 128, 128, 0.3);
+        }
+
+        .left-joystick {
+            bottom: 40px;
+            left: 40px;
         }
 
         .right-joystick {
-            width: 140px;
-            height: 140px;
-            background: rgba(255, 255, 255, 0.15);
-            border: 3px solid rgba(255, 68, 68, 0.6);
-            border-radius: 50%;
-            backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: auto;
-            box-shadow: 0 0 20px rgba(255, 68, 68, 0.3);
+            bottom: 40px;
+            right: 40px;
         }
 
         #rightControls {
@@ -374,13 +412,13 @@
         .joystick-handle {
             width: 60px;
             height: 60px;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(128, 128, 128, 0.9);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 24px;
-            color: #333;
+            color: white;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             transition: transform 0.05s ease;
@@ -389,13 +427,9 @@
             border: 2px solid rgba(255, 255, 255, 0.8);
         }
 
-        .left-joystick .joystick-handle {
-            background: rgba(76, 175, 80, 0.9);
-            color: white;
-        }
-
+        .left-joystick .joystick-handle,
         .right-joystick .joystick-handle {
-            background: rgba(255, 68, 68, 0.9);
+            background: rgba(128, 128, 128, 0.9);
             color: white;
         }
 
@@ -403,41 +437,11 @@
             transform: scale(0.95);
         }
 
-        .mobile-shoot-btn {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            background: rgba(255, 68, 68, 0.4);
-            border: 4px solid #ff4444;
-            backdrop-filter: blur(8px);
-            color: white;
-            font-size: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 20px rgba(255, 68, 68, 0.4);
-            transition: all 0.1s;
-            -webkit-tap-highlight-color: transparent;
-            pointer-events: auto;
-        }
-
-        .mobile-shoot-btn:active {
-            transform: scale(0.85);
-            background: rgba(255, 68, 68, 0.8);
-            box-shadow: 0 4px 30px rgba(255, 68, 68, 0.8);
-        }
-
-        .left-joystick.active {
+        .left-joystick.active,
+        .right-joystick.active {
             border-color: #4CAF50;
             background: rgba(76, 175, 80, 0.25);
             box-shadow: 0 0 30px #4CAF50;
-        }
-
-        .right-joystick.active {
-            border-color: #ff4444;
-            background: rgba(255, 68, 68, 0.25);
-            box-shadow: 0 0 30px #ff4444;
         }
 
         .joystick-handle::after {
@@ -466,12 +470,6 @@
                 height: 50px;
                 font-size: 20px;
             }
-
-            .mobile-shoot-btn {
-                width: 80px;
-                height: 80px;
-                font-size: 35px;
-            }
         }
 
         @media (max-width: 480px) {
@@ -483,14 +481,10 @@
             }
 
             .right-joystick {
-                width: 100px;
-                height: 100px;
-            }
-
-            #rightControls {
                 right: 20px;
                 bottom: 20px;
-                gap: 15px;
+                width: 100px;
+                height: 100px;
             }
 
             .joystick-handle {
@@ -498,15 +492,8 @@
                 height: 45px;
                 font-size: 18px;
             }
-
-            .mobile-shoot-btn {
-                width: 70px;
-                height: 70px;
-                font-size: 30px;
-            }
         }
 
-        /* Landscape mode */
         @media (max-width: 768px) and (orientation: landscape) {
             .left-joystick {
                 left: 20px;
@@ -516,26 +503,16 @@
             }
 
             .right-joystick {
-                width: 90px;
-                height: 90px;
-            }
-
-            #rightControls {
                 right: 20px;
                 bottom: 20px;
-                gap: 10px;
+                width: 90px;
+                height: 90px;
             }
 
             .joystick-handle {
                 width: 40px;
                 height: 40px;
                 font-size: 16px;
-            }
-
-            .mobile-shoot-btn {
-                width: 60px;
-                height: 60px;
-                font-size: 25px;
             }
         }
 
@@ -1168,7 +1145,9 @@
             </div>
         </div>
     </div>
-    
+
+    <button id="fullscreenBtn" class="fullscreen-btn" onclick="toggleFullscreen()">⛶</button>
+
     <div id="respawnScreen">
         <div class="container">
             <div class="skull">💀</div>
@@ -1855,44 +1834,24 @@
             }
         });
 
-        function updateAimJoystick(touch) {
-            const aimStick = document.getElementById('aimJoystick');
-            const aimHandle = document.getElementById('aimHandle');
-            
-            if (!aimStick || !aimHandle) return;
-            
-            const rect = aimStick.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            
-            let dx = touch.clientX - centerX;
-            let dy = touch.clientY - centerY;
-            const distance = Math.hypot(dx, dy);
-            const maxDistance = rect.width / 2;
-            
-            if (distance > maxDistance) {
-                dx = (dx / distance) * maxDistance;
-                dy = (dy / distance) * maxDistance;
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.webkitRequestFullscreen) {
+                    document.documentElement.webkitRequestFullscreen();
+                } else if (document.documentElement.msRequestFullscreen) {
+                    document.documentElement.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
             }
-            
-            aimJoystick.angle = Math.atan2(dy, dx);
-            aimJoystick.force = Math.min(distance / maxDistance, 1);
-            aimJoystick.x = dx;
-            aimJoystick.y = dy;
-            
-            aimHandle.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-        }
-
-        function resetJoystick() {
-            const aimHandle = document.getElementById('aimHandle');
-            if (aimHandle) {
-                aimHandle.style.transform = 'translate(-50%, -50%)';
-            }
-            aimJoystick.active = false;
-            aimJoystick.force = 0;
-            aimJoystick.x = 0;
-            aimJoystick.y = 0;
-            aimJoystick.angle = 0;
         }
 
         function handleMobileMovement(deltaTime) {
@@ -1996,8 +1955,9 @@
             const maxDistance = rect.width / 2 - movementHandle.offsetWidth / 2;
             
             if (distance > maxDistance) {
-                dx = (dx / distance) * maxDistance;
-                dy = (dy / distance) * maxDistance;
+                const angle = Math.atan2(dy, dx);
+                dx = Math.cos(angle) * maxDistance;
+                dy = Math.sin(angle) * maxDistance;
             }
             
             movementJoystick.angle = Math.atan2(dy, dx);
@@ -2005,13 +1965,13 @@
             movementJoystick.x = dx;
             movementJoystick.y = dy;
             
-            movementHandle.style.transform = `translate(${dx}px, ${dy}px)`;
+            movementHandle.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
         }
 
         function resetMovementJoystick() {
             const movementHandle = document.getElementById('movementHandle');
             if (movementHandle) {
-                movementHandle.style.transform = 'translate(0px, 0px)';
+                movementHandle.style.transform = 'translate3d(0px, 0px, 0)';
             }
             movementJoystick.active = false;
             movementJoystick.force = 0;
@@ -2036,8 +1996,9 @@
             const maxDistance = rect.width / 2 - aimHandle.offsetWidth / 2;
             
             if (distance > maxDistance) {
-                dx = (dx / distance) * maxDistance;
-                dy = (dy / distance) * maxDistance;
+                const angle = Math.atan2(dy, dx);
+                dx = Math.cos(angle) * maxDistance;
+                dy = Math.sin(angle) * maxDistance;
             }
             
             aimJoystick.angle = Math.atan2(dy, dx);
@@ -2045,7 +2006,7 @@
             aimJoystick.x = dx;
             aimJoystick.y = dy;
             
-            aimHandle.style.transform = `translate(${dx}px, ${dy}px)`;
+            aimHandle.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
             
             if (!isFiring && !isGhost && aimJoystick.force > 0.1) {
                 isFiring = true;
@@ -2056,7 +2017,7 @@
         function resetAimJoystick() {
             const aimHandle = document.getElementById('aimHandle');
             if (aimHandle) {
-                aimHandle.style.transform = 'translate(0px, 0px)';
+                aimHandle.style.transform = 'translate3d(0px, 0px, 0)';
             }
             aimJoystick.active = false;
             aimJoystick.force = 0;
