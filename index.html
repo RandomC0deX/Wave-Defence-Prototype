@@ -308,7 +308,7 @@
             50% { opacity: 0.3; }
         }
 
-        #mobileControls {
+                #mobileControls {
             position: fixed;
             bottom: 0;
             left: 0;
@@ -323,132 +323,220 @@
             #mobileControls {
                 display: block;
             }
- 
+        
             body {
                 cursor: none;
             }
         }
 
-        #dpad {
+        .left-joystick {
             position: absolute;
-            bottom: 30px;
-            left: 30px;
+            bottom: 40px;
+            left: 40px;
+            width: 140px;
+            height: 140px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 3px solid rgba(76, 175, 80, 0.6);
+            border-radius: 50%;
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             pointer-events: auto;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
         }
 
-        .dpad-container {
-            width: 180px;
-            height: 180px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .dpad-middle-row {
-            display: flex;
-            gap: 5px;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .dpad-btn {
-            width: 60px;
-            height: 60px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.6);
-            border-radius: 15px;
-            backdrop-filter: blur(5px);
-            color: white;
-            font-size: 24px;
+        .right-joystick {
+            width: 140px;
+            height: 140px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 3px solid rgba(255, 68, 68, 0.6);
+            border-radius: 50%;
+            backdrop-filter: blur(8px);
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: all 0.1s;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-        }
-
-        .dpad-btn:active {
-            background: rgba(76, 175, 80, 0.6);
-            transform: scale(0.95);
-            border-color: #4CAF50;
-        }
-
-        .dpad-btn.active {
-            background: rgba(76, 175, 80, 0.8);
-            border-color: #4CAF50;
-        }
-
-        .dpad-center {
-            width: 60px;
-            height: 60px;
+            pointer-events: auto;
+            box-shadow: 0 0 20px rgba(255, 68, 68, 0.3);
         }
 
         #rightControls {
             position: absolute;
-            bottom: 30px;
-            right: 30px;
+            bottom: 40px;
+            right: 40px;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 20px;
-            pointer-events: auto;
-        }
-
-        .joystick {
-            width: 120px;
-            height: 120px;
-            background: rgba(255, 255, 255, 0.15);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            backdrop-filter: blur(5px);
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            pointer-events: none;
         }
 
         .joystick-handle {
-            width: 50px;
-            height: 50px;
-            background: rgba(255, 255, 255, 0.8);
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.9);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
+            font-size: 24px;
             color: #333;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            transition: transform 0.1s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: transform 0.05s ease;
             user-select: none;
+            pointer-events: none;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .left-joystick .joystick-handle {
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+        }
+
+        .right-joystick .joystick-handle {
+            background: rgba(255, 68, 68, 0.9);
+            color: white;
+        }
+
+        .joystick-handle:active {
+            transform: scale(0.95);
         }
 
         .mobile-shoot-btn {
-            width: 80px;
-            height: 80px;
+            width: 90px;
+            height: 90px;
             border-radius: 50%;
-            background: rgba(255, 0, 0, 0.4);
-            border: 3px solid #ff4444;
-            backdrop-filter: blur(5px);
+            background: rgba(255, 68, 68, 0.4);
+            border: 4px solid #ff4444;
+            backdrop-filter: blur(8px);
             color: white;
-            font-size: 36px;
+            font-size: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.4);
+            box-shadow: 0 4px 20px rgba(255, 68, 68, 0.4);
             transition: all 0.1s;
             -webkit-tap-highlight-color: transparent;
+            pointer-events: auto;
         }
 
         .mobile-shoot-btn:active {
-            transform: scale(0.9);
-            background: rgba(255, 0, 0, 0.8);
-            box-shadow: 0 4px 20px rgba(255, 0, 0, 0.8);
+            transform: scale(0.85);
+            background: rgba(255, 68, 68, 0.8);
+            box-shadow: 0 4px 30px rgba(255, 68, 68, 0.8);
+        }
+
+        .left-joystick.active {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.25);
+            box-shadow: 0 0 30px #4CAF50;
+        }
+
+        .right-joystick.active {
+            border-color: #ff4444;
+            background: rgba(255, 68, 68, 0.25);
+            box-shadow: 0 0 30px #ff4444;
+        }
+
+        .joystick-handle::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .joystick.active .joystick-handle::after {
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .left-joystick, .right-joystick {
+                width: 120px;
+                height: 120px;
+            }
+
+            .joystick-handle {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+
+            .mobile-shoot-btn {
+                width: 80px;
+                height: 80px;
+                font-size: 35px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .left-joystick {
+                left: 20px;
+                bottom: 20px;
+                width: 100px;
+                height: 100px;
+            }
+
+            .right-joystick {
+                width: 100px;
+                height: 100px;
+            }
+
+            #rightControls {
+                right: 20px;
+                bottom: 20px;
+                gap: 15px;
+            }
+
+            .joystick-handle {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+
+            .mobile-shoot-btn {
+                width: 70px;
+                height: 70px;
+                font-size: 30px;
+            }
+        }
+
+        /* Landscape mode */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .left-joystick {
+                left: 20px;
+                bottom: 20px;
+                width: 90px;
+                height: 90px;
+            }
+
+            .right-joystick {
+                width: 90px;
+                height: 90px;
+            }
+
+            #rightControls {
+                right: 20px;
+                bottom: 20px;
+                gap: 10px;
+            }
+
+            .joystick-handle {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+
+            .mobile-shoot-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 25px;
+            }
         }
 
         @media (max-width: 768px) {
@@ -1012,7 +1100,7 @@
                 opacity: 0.7;
             }
         }
-        
+
         @supports (padding: max(0px)) {
             #playerName {
                 bottom: max(55px, env(safe-area-inset-bottom));
@@ -1070,26 +1158,17 @@
     </div>
 
     <div id="mobileControls" style="display: none;">
-        <div id="dpad">
-            <div class="dpad-container">
-                <button class="dpad-btn up" id="dpadUp">▲</button>
-                <div class="dpad-middle-row">
-                    <button class="dpad-btn left" id="dpadLeft">◀</button>
-                    <div class="dpad-center"></div>
-                    <button class="dpad-btn right" id="dpadRight">▶</button>
-                </div>
-                <button class="dpad-btn down" id="dpadDown">▼</button>
-            </div>
+        <div id="movementJoystick" class="joystick left-joystick">
+            <div class="joystick-handle" id="movementHandle">⬤</div>
         </div>
 
         <div id="rightControls">
-            <div id="aimJoystick" class="joystick">
-                <div class="joystick-handle" id="aimHandle">⚫</div>
+            <div id="aimJoystick" class="joystick right-joystick">
+                <div class="joystick-handle" id="aimHandle">⬤</div>
             </div>
-            <button id="mobileShootBtn" class="mobile-shoot-btn">🔫</button>
         </div>
     </div>
-
+    
     <div id="respawnScreen">
         <div class="container">
             <div class="skull">💀</div>
@@ -1196,7 +1275,7 @@
         let menuCenterX = 1000, menuCenterY = 1000;
 
         // Mobile Controls
-        let mobileMovement = { up: false, down: false, left: false, right: false };
+        let movementJoystick = { active: false, x: 0, y: 0, angle: 0, force: 0 };
         let aimJoystick = { active: false, x: 0, y: 0, angle: 0, force: 0 };
         let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
@@ -1816,6 +1895,24 @@
             aimJoystick.angle = 0;
         }
 
+        function handleMobileMovement(deltaTime) {
+            if (!isMobile) return;
+            
+            const moveAmount = SPEED * (deltaTime || 0.016);
+            
+            if (movementJoystick.active && movementJoystick.force > 0.1) {
+                const moveX = Math.cos(movementJoystick.angle) * movementJoystick.force * moveAmount;
+                const moveY = Math.sin(movementJoystick.angle) * movementJoystick.force * moveAmount;
+                
+                myX += moveX;
+                myY += moveY;
+            }
+            
+            if (aimJoystick.active && aimJoystick.force > 0.1) {
+                playerAngle = aimJoystick.angle;
+            }
+        }
+
         function initMobileControls() {
             if (!isMobile) {
                 document.getElementById('mobileControls').style.display = 'none';
@@ -1824,61 +1921,41 @@
             
             document.getElementById('mobileControls').style.display = 'block';
             
-            const dpadUp = document.getElementById('dpadUp');
-            const dpadDown = document.getElementById('dpadDown');
-            const dpadLeft = document.getElementById('dpadLeft');
-            const dpadRight = document.getElementById('dpadRight');
-            
-            dpadUp.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                mobileMovement.up = true;
-                dpadUp.classList.add('active');
-            });
-            dpadUp.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                mobileMovement.up = false;
-                dpadUp.classList.remove('active');
-            });
-            
-            dpadDown.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                mobileMovement.down = true;
-                dpadDown.classList.add('active');
-            });
-            dpadDown.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                mobileMovement.down = false;
-                dpadDown.classList.remove('active');
-            });
-            
-            dpadLeft.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                mobileMovement.left = true;
-                dpadLeft.classList.add('active');
-            });
-            dpadLeft.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                mobileMovement.left = false;
-                dpadLeft.classList.remove('active');
-            });
-            
-            dpadRight.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                mobileMovement.right = true;
-                dpadRight.classList.add('active');
-            });
-            dpadRight.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                mobileMovement.right = false;
-                dpadRight.classList.remove('active');
-            });
-            
+            const movementStick = document.getElementById('movementJoystick');
+            const movementHandle = document.getElementById('movementHandle');
             const aimStick = document.getElementById('aimJoystick');
             const aimHandle = document.getElementById('aimHandle');
-            
+
+            movementStick.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                movementJoystick.active = true;
+                movementStick.classList.add('active');
+                updateMovementJoystick(e.touches[0]);
+            });
+
+            movementStick.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (movementJoystick.active) {
+                    updateMovementJoystick(e.touches[0]);
+                }
+            });
+
+            movementStick.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                resetMovementJoystick();
+                movementStick.classList.remove('active');
+            });
+
+            movementStick.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                resetMovementJoystick();
+                movementStick.classList.remove('active');
+            });
+
             aimStick.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 aimJoystick.active = true;
+                aimStick.classList.add('active');
                 updateAimJoystick(e.touches[0]);
             });
 
@@ -1891,90 +1968,107 @@
 
             aimStick.addEventListener('touchend', (e) => {
                 e.preventDefault();
-                resetJoystick(); 
-                
-                if (isFiring) {
-                    isFiring = false;
-                    if (fireInterval) {
-                        clearInterval(fireInterval);
-                        fireInterval = null;
-                    }
-                }
+                resetAimJoystick();
+                aimStick.classList.remove('active');
             });
 
             aimStick.addEventListener('touchcancel', (e) => {
                 e.preventDefault();
-                resetJoystick();  
+                resetAimJoystick();
+                aimStick.classList.remove('active');
             });
 
-            const shootBtn = document.getElementById('mobileShootBtn');
-            
-            shootBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (!isGhost && myId && isConnected) {
-                    isFiring = true;
-                    startFiring();
-                }
-            });
-            
-            shootBtn.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                isFiring = false;
-                if (fireInterval) {
-                    clearInterval(fireInterval);
-                    fireInterval = null;
-                }
-            });
-            
-            shootBtn.addEventListener('touchcancel', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                isFiring = false;
-                if (fireInterval) {
-                    clearInterval(fireInterval);
-                    fireInterval = null;
-                }
-            });
         }
 
-        function handleMobileMovement(deltaTime) {
-            if (!isMobile) return;
+        function updateMovementJoystick(touch) {
+            const movementStick = document.getElementById('movementJoystick');
+            const movementHandle = document.getElementById('movementHandle');
             
-            const moveAmount = SPEED * (deltaTime || 0.016);
+            if (!movementStick || !movementHandle) return;
             
-            let moveX = 0;
-            let moveY = 0;
+            const rect = movementStick.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
             
-            if (mobileMovement.up) moveY -= 1;
-            if (mobileMovement.down) moveY += 1;
-            if (mobileMovement.left) moveX -= 1;
-            if (mobileMovement.right) moveX += 1;
-
-            if (moveX !== 0 && moveY !== 0) {
-                const length = Math.sqrt(moveX * moveX + moveY * moveY);
-                moveX /= length;
-                moveY /= length;
+            let dx = touch.clientX - centerX;
+            let dy = touch.clientY - centerY;
+            const distance = Math.hypot(dx, dy);
+            const maxDistance = rect.width / 2 - movementHandle.offsetWidth / 2;
+            
+            if (distance > maxDistance) {
+                dx = (dx / distance) * maxDistance;
+                dy = (dy / distance) * maxDistance;
             }
+            
+            movementJoystick.angle = Math.atan2(dy, dx);
+            movementJoystick.force = Math.min(distance / maxDistance, 1);
+            movementJoystick.x = dx;
+            movementJoystick.y = dy;
+            
+            movementHandle.style.transform = `translate(${dx}px, ${dy}px)`;
+        }
 
-            myX += moveX * moveAmount;
-            myY += moveY * moveAmount;
+        function resetMovementJoystick() {
+            const movementHandle = document.getElementById('movementHandle');
+            if (movementHandle) {
+                movementHandle.style.transform = 'translate(0px, 0px)';
+            }
+            movementJoystick.active = false;
+            movementJoystick.force = 0;
+            movementJoystick.x = 0;
+            movementJoystick.y = 0;
+            movementJoystick.angle = 0;
+        }
 
-            if (aimJoystick.active && aimJoystick.force > 0.1) {
-                playerAngle = aimJoystick.angle;
-                
-                if (!isFiring && !isGhost) {
-                    isFiring = true;
-                    startFiring();
-                }
-            } else {
-                if (isFiring && !isGhost) {
-                    isFiring = false;
-                    if (fireInterval) {
-                        clearInterval(fireInterval);
-                        fireInterval = null;
-                    }
+        function updateAimJoystick(touch) {
+            const aimStick = document.getElementById('aimJoystick');
+            const aimHandle = document.getElementById('aimHandle');
+            
+            if (!aimStick || !aimHandle) return;
+            
+            const rect = aimStick.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            let dx = touch.clientX - centerX;
+            let dy = touch.clientY - centerY;
+            const distance = Math.hypot(dx, dy);
+            const maxDistance = rect.width / 2 - aimHandle.offsetWidth / 2;
+            
+            if (distance > maxDistance) {
+                dx = (dx / distance) * maxDistance;
+                dy = (dy / distance) * maxDistance;
+            }
+            
+            aimJoystick.angle = Math.atan2(dy, dx);
+            aimJoystick.force = Math.min(distance / maxDistance, 1);
+            aimJoystick.x = dx;
+            aimJoystick.y = dy;
+            
+            aimHandle.style.transform = `translate(${dx}px, ${dy}px)`;
+            
+            if (!isFiring && !isGhost && aimJoystick.force > 0.1) {
+                isFiring = true;
+                startFiring();
+            }
+        }
+
+        function resetAimJoystick() {
+            const aimHandle = document.getElementById('aimHandle');
+            if (aimHandle) {
+                aimHandle.style.transform = 'translate(0px, 0px)';
+            }
+            aimJoystick.active = false;
+            aimJoystick.force = 0;
+            aimJoystick.x = 0;
+            aimJoystick.y = 0;
+            aimJoystick.angle = 0;
+            
+            if (isFiring) {
+                isFiring = false;
+                if (fireInterval) {
+                    clearInterval(fireInterval);
+                    fireInterval = null;
                 }
             }
         }
@@ -1990,12 +2084,15 @@
                         
                         let worldX, worldY;
                         
-                        if (isMobile && aimJoystick.active) {
-                            // Use joystick angle for mobile
-                            worldX = myX + Math.cos(aimJoystick.angle) * 100;
-                            worldY = myY + Math.sin(aimJoystick.angle) * 100;
+                        if (isMobile) {
+                            if (aimJoystick.active && aimJoystick.force > 0.1) {
+                                worldX = myX + Math.cos(aimJoystick.angle) * 1000;
+                                worldY = myY + Math.sin(aimJoystick.angle) * 1000;
+                            } else {
+                                worldX = myX + Math.cos(playerAngle) * 1000;
+                                worldY = myY + Math.sin(playerAngle) * 1000;
+                            }
                         } else {
-                            // Use mouse for desktop
                             const rect = canvas.getBoundingClientRect();
                             worldX = lastMouseX - rect.left + cameraX;
                             worldY = lastMouseY - rect.top + cameraY;
@@ -3066,4 +3163,3 @@
     </script>
 </body>
 </html>
-
