@@ -308,33 +308,6 @@
             50% { opacity: 0.3; }
         }
 
-        #mobileControls {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 5000;
-            display: none;
-        }
-
-        /* Hide joysticks when main menu is visible */
-        .main-menu-visible #mobileControls,
-        body:has(#mainMenu[style*="display: flex"]) #mobileControls {
-            display: none !important;
-        }
-
-        @media (max-width: 768px) {
-            #mobileControls {
-                display: block;
-            }
-        
-            body {
-                cursor: none;
-            }
-        }
-
         .fullscreen-btn {
             position: fixed;
             top: 20px;
@@ -379,180 +352,6 @@
             display: none !important;
         }
 
-        /* Joystick styles - symmetrical and properly sized for mobile */
-        .left-joystick, .right-joystick {
-            position: absolute;
-            width: 110px;
-            height: 110px;
-            background: rgba(255, 255, 255, 0.15);
-            border: 3px solid rgba(128, 128, 128, 0.6);
-            border-radius: 50%;
-            backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: auto;
-            box-shadow: 0 0 20px rgba(128, 128, 128, 0.3);
-            bottom: 30px;
-        }
-
-        .left-joystick {
-            left: 30px;
-        }
-
-        .right-joystick {
-            right: 30px;
-        }
-
-        #rightControls {
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-            pointer-events: none;
-        }
-
-        .joystick-handle {
-            width: 50px;
-            height: 50px;
-            background: rgba(128, 128, 128, 0.9);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            color: white;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            transition: transform 0.05s ease;
-            user-select: none;
-            pointer-events: none;
-            border: 2px solid rgba(255, 255, 255, 0.8);
-        }
-
-        .left-joystick .joystick-handle,
-        .right-joystick .joystick-handle {
-            background: rgba(128, 128, 128, 0.9);
-            color: white;
-        }
-
-        .joystick-handle:active {
-            transform: scale(0.95);
-        }
-
-        .left-joystick.active,
-        .right-joystick.active {
-            border-color: #4CAF50;
-            background: rgba(76, 175, 80, 0.25);
-            box-shadow: 0 0 30px #4CAF50;
-        }
-
-        .joystick-handle::after {
-            content: '';
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-
-        .joystick.active .joystick-handle::after {
-            opacity: 1;
-        }
-
-        /* Responsive sizes for smaller phones */
-        @media (max-width: 480px) {
-            .left-joystick, .right-joystick {
-                width: 90px;
-                height: 90px;
-                bottom: 20px;
-            }
-
-            .left-joystick {
-                left: 20px;
-            }
-
-            .right-joystick {
-                right: 20px;
-            }
-
-            .joystick-handle {
-                width: 40px;
-                height: 40px;
-                font-size: 18px;
-            }
-
-            #rightControls {
-                bottom: 20px;
-                right: 20px;
-                gap: 12px;
-            }
-        }
-
-        @media (max-width: 768px) and (orientation: landscape) {
-            .left-joystick, .right-joystick {
-                width: 80px;
-                height: 80px;
-                bottom: 15px;
-            }
-
-            .left-joystick {
-                left: 15px;
-            }
-
-            .right-joystick {
-                right: 15px;
-            }
-
-            .joystick-handle {
-                width: 35px;
-                height: 35px;
-                font-size: 16px;
-            }
-
-            #rightControls {
-                bottom: 15px;
-                right: 15px;
-                gap: 10px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            #fps, #debug {
-                font-size: 10px;
-                opacity: 0.7;
-            }
-        }
-
-        @media (max-width: 768px) {
-            #gameCanvas {
-                width: 100vw;
-                height: 100vh;
-                object-fit: cover; 
-            }
-
-            body {
-                margin: 0;
-                padding: 0;
-                overflow: hidden;
-                background: #1a1a2e;
-            }
-
-            canvas {
-                display: block;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-            }
-        }
-        
         #leaderboard {
             position: fixed;
             top: 10px;
@@ -666,7 +465,6 @@
             display: none;
         }
         
-        /* Scaled down chat for mobile */
         #chatContainer {
             position: fixed;
             bottom: 15px;
@@ -731,7 +529,7 @@
             border-bottom: 1px solid #444;
             background: rgba(0,0,0,0.1);
             word-wrap: break-word;      
-            word-break: break-all;      
+            word-break: keep-all;       
             white-space: normal;       
             line-height: 1.3;      
             overflow: hidden;     
@@ -781,208 +579,25 @@
         
         #gameCanvas {
             display: block;
+            position: relative;
         }
 
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-            100% { transform: translateY(0px); }
-        }
-
-        /* Mobile UI Scaling for all elements */
-        @media (max-width: 768px) {
-            #playerName {
-                font-size: clamp(14px, 3.5vw, 20px);
-                bottom: 60px;
+        @keyframes breathe {
+            0% { 
+                background-position: 0 0;
+                filter: blur(0.3px);
             }
-
-            #waveInfo {
-                min-width: auto;
-                width: auto;
-                max-width: 180px;
-                padding: 6px 10px;
-                font-size: clamp(11px, 2.5vw, 14px);
-                top: 5px;
-            }
-
-            #waveDisplay {
-                font-size: clamp(12px, 3vw, 16px);
-            }
-
-            #enemyCount {
-                font-size: clamp(10px, 2.5vw, 12px);
-            }
-
-            #leaderboard {
-                width: auto;
-                min-width: 100px;
-                max-width: 150px;
-                font-size: clamp(9px, 2vw, 11px);
-                top: 5px;
-                right: 5px;
-                padding: 5px;
-            }
-
-            #hpBarContainer {
-                width: min(220px, 60vw);
-                height: 14px;
-                bottom: 10px;
-            }
-
-            #hpText {
-                font-size: clamp(9px, 2vw, 11px);
-            }
-
-            #Score {
-                font-size: clamp(9px, 2vw, 11px);
-                bottom: 32px;
-            }
-
-            /* Scale menu for mobile */
-            .menu-container {
-                min-width: auto;
-                width: 90%;
-                max-width: 380px;
-                padding: 25px 15px;
-            }
-
-            .game-title {
-                font-size: clamp(36px, 8vw, 48px);
-                margin-bottom: 25px;
-            }
-
-            .menu-btn {
-                font-size: clamp(16px, 3.5vw, 20px);
-                padding: 10px 15px;
-            }
-
-            .play-btn {
-                font-size: clamp(20px, 4.5vw, 24px);
-            }
-
-            .name-input-container {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            #playerNameInput {
-                width: 100%;
-                font-size: 14px;
-                padding: 8px;
-                box-sizing: border-box;
-            }
-
-            .name-set-btn {
-                width: 100%;
-                padding: 8px;
-                font-size: 14px;
-            }
-
-            .menu-footer {
-                font-size: 11px;
-                padding-top: 15px;
-            }
-
-            /* Scale respawn screen for mobile */
-            #respawnScreen .skull {
-                font-size: min(70px, 18vw);
-            }
-
-            #respawnScreen .title {
-                font-size: min(40px, 10vw);
-            }
-
-            #respawnScreen .wave-text {
-                font-size: min(20px, 5vw);
-            }
-
-            #respawnScreen button {
-                font-size: min(28px, 7vw);
-                padding: min(12px, 3vw) min(30px, 8vw);
-            }
-
-            #fps, #debug {
-                font-size: 9px;
-                padding: 3px 5px;
-            }
-
-            #debug {
-                max-width: min(180px, 35vw);
+            100% { 
+                background-position: 0 2px;
+                filter: blur(0.6px);
             }
         }
 
-        @media (max-width: 400px) {
-            #hpBarContainer {
-                width: min(180px, 55vw);
-                height: 12px;
-            }
-
-            #hpText {
-                font-size: 8px;
-            }
-
-            #playerName {
-                font-size: 12px;
-                bottom: 55px;
-            }
-
-            #Score {
-                font-size: 8px;
-                bottom: 28px;
-            }
-
-            #chatContainer:not(.collapsed) {
-                width: min(200px, 65vw);
-            }
-
-            #chatMessages {
-                max-height: 120px;
-            }
+        @keyframes breathe {
+            0% { opacity: 0.7; filter: blur(0.3px) brightness(1.02); }
+            100% { opacity: 0.8; filter: blur(0.6px) brightness(1.05); }
         }
-
-        @media (max-width: 768px) and (orientation: landscape) {
-            #hpBarContainer {
-                width: min(180px, 35vw);
-                bottom: 5px;
-            }
-
-            #playerName {
-                bottom: 40px;
-            }
-
-            #Score {
-                bottom: 22px;
-            }
-
-            #chatContainer:not(.collapsed) {
-                max-height: 180px;
-            }
-
-            #chatMessages {
-                max-height: 90px;
-            }
-        }
-
-        /* Touch target sizing */
-        @media (max-width: 768px) {
-            .menu-btn, 
-            .name-set-btn,
-            #chatSend,
-            .joystick-handle {
-                min-height: 40px; 
-                min-width: 40px;
-            }
-
-            .menu-btn,
-            #playerNameInput,
-            #chatInput {
-                -webkit-touch-callout: none;
-                -webkit-user-select: none;
-                user-select: none;
-            }
-        }
-
-        /* Safe area support */
+                /* Safe area support */
         @supports (padding: max(0px)) {
             #playerName {
                 bottom: max(55px, env(safe-area-inset-bottom));
@@ -992,20 +607,15 @@
                 bottom: max(15px, env(safe-area-inset-bottom));
             }
 
-            #rightControls {
-                bottom: max(30px, env(safe-area-inset-bottom));
-                right: max(30px, env(safe-area-inset-right));
-            }
-
             #chatContainer {
                 bottom: max(15px, env(safe-area-inset-bottom));
                 left: max(15px, env(safe-area-inset-left));
             }
         }
-
     </style>
 </head>
 <body>
+    
     <div id="stateDisplay">STATE: Connecting...</div>
 
     <!-- Main Menu Screen -->
@@ -1020,7 +630,7 @@
             </div>
 
             <div class="name-input-container">
-                <input type="text" id="playerNameInput" maxlength="15" placeholder="ENTER YOUR NAME" value="Player">
+                <input type="text" id="playerNameInput" maxlength="15" placeholder="ENTER YOUR NAME" value="">
                 <button class="name-set-btn" onclick="setPlayerName()">SET</button>
             </div>
 
@@ -1033,20 +643,6 @@
             </div>
         </div>
     </div>
-
-    <div id="mobileControls" style="display: none;">
-        <div id="movementJoystick" class="joystick left-joystick">
-            <div class="joystick-handle" id="movementHandle">⬤</div>
-        </div>
-
-        <div id="rightControls">
-            <div id="aimJoystick" class="joystick right-joystick">
-                <div class="joystick-handle" id="aimHandle">⬤</div>
-            </div>
-        </div>
-    </div>
-
-    <button id="fullscreenBtn" class="fullscreen-btn" onclick="toggleFullscreen()">⛶</button>
 
     <div id="respawnScreen">
         <div class="container">
@@ -1119,7 +715,7 @@
         let ws = null;
         let players = {};
         let myId = null;
-        let currentPlayerName = "Player";
+        let currentPlayerName = "player";
         let keys = {};
         let debugInfo = [];
         let lastPlayerCount = 0;
@@ -1136,6 +732,17 @@
         const GHOST_ALPHA = 0.5;
         let isInGame = false;
         let playerAngle = 0;
+        let ping = 0;
+        let pingHistory = [];
+        const PING_HISTORY_MAX = 10;
+        let lastPingSent = 0;
+        const PING_INTERVAL = 2000;
+        let inputSequence = 0;          
+        let pendingInputs = [];            
+        let positionHistory = [];           
+        let lastConfirmedSeq = 0;          
+        let lastServerPosition = { x: 0, y: 0 };
+        const MAX_HISTORY_SIZE = 100;    
 
         // Movement
         const SPEED = 110;
@@ -1153,11 +760,6 @@
         const MENU_CAMERA_RADIUS = 200;
         let menuCenterX = 1000, menuCenterY = 1000;
 
-        // Mobile Controls
-        let movementJoystick = { active: false, x: 0, y: 0, angle: 0, force: 0 };
-        let aimJoystick = { active: false, x: 0, y: 0, angle: 0, force: 0 };
-        let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
         // World boundaries
         const WORLD_WIDTH = 2000;
         const WORLD_HEIGHT = 2000;
@@ -1172,11 +774,11 @@
         let bullets = [];
         let enemy_bullets = [];
         let lastShotTime = 0;
-        const SHOT_COOLDOWN = 500; 
+        const SHOT_COOLDOWN = 200; 
         let isFiring = false;      
         let fireInterval = null;
         const DAMAGE = 5;
-        const BULLET_SPEED = 300;
+        const BULLET_SPEED = 600;
         const BULLET_SIZE = 5;
 
         // Enemies
@@ -1225,21 +827,21 @@
         document.getElementById('stateDisplay').innerHTML = 'CONNECTING...';
         document.getElementById('stateDisplay').classList.add('connecting');
 
-        // Hide menu initially
         document.getElementById('mainMenu').style.display = 'none';
 
-        // Create connection and set up handlers immediately
-        ws = new WebSocket('wss://ran.taila641d5.ts.net');
+        // Create connection 
+        ws = new WebSocket('ws://localhost:10000');
 
         ws.onopen = () => {
             debug('✅ Connected to server');
             isConnected = true;
             
-            // Hide connecting, show menu
             document.getElementById('stateDisplay').classList.add('hidden');
             document.getElementById('mainMenu').style.display = 'flex';
             
             ws.send(JSON.stringify({type: 'hello_menu'}));
+
+            startPingSystem();
 
             document.getElementById('chatSend').addEventListener('click', sendChatMessage);
             document.getElementById('chatInput').addEventListener('keypress', (e) => { 
@@ -1256,6 +858,10 @@
                 }
                 if (data.type === 'leaderboard') {
                     updateLeaderboardDisplay(data.leaderboard);
+                }
+
+                if (data.type === 'pong') {
+                    calculatePing(data.sent);
                 }
 
                 if (isInGame) {
@@ -1396,23 +1002,94 @@
                     updateLeaderboardDisplay(data.leaderboard);
                 }
 
-                if (data.type === 'update') {
+                if (data.type === 'bullet_update') {
+                    bullets = data.bullets || [];
+                    enemy_bullets = data.enemy_bullets || [];
 
+                     const hitBullets = bullets.filter(b => b.hit === true);
+                    if (hitBullets.length > 0) {
+                        console.log('🔥 HIT BULLETS RECEIVED:', hitBullets.map(b => ({
+                            id: b.id,
+                            hit: b.hit,
+                            hit_time: b.hit_time,
+                            current_time: Date.now() / 1000,
+                            age: Date.now() / 1000 - b.hit_time
+                        })));
+                    }
+                    
+                    updateBulletInterpolation(bullets);
+                    updateEnemyBulletInterpolation(enemy_bullets);
+                }
+
+                if (data.type === 'update') {
+                    const serverSeq = data.last_processed_seq || 0;
+  
                     enemies = data.enemies || [];
                     players = data.players || {};
-                    enemy_bullets = data.enemy_bullets || []; 
-                    
-                    bullets = data.bullets || [];
 
-                    updateBulletInterpolation(data.bullets || []);
+                    if (data.your_player && myId) {
+                        const serverX = data.your_player.x;
+                        const serverY = data.your_player.y;
+                        const serverAngle = data.your_player.angle;
+                        const serverSeq = data.last_processed_seq || 0;
+
+                        if (players[myId]) {
+                            players[myId].x = serverX;
+                            players[myId].y = serverY;
+                            players[myId].angle = serverAngle;
+                        }
+
+                        myX = serverX;
+                        myY = serverY;
+                        playerAngle = serverAngle;
+
+                        if (serverSeq > lastConfirmedSeq) {
+                            lastConfirmedSeq = serverSeq;
+                            lastServerPosition = { x: serverX, y: serverY };
+
+                            const positionDiff = Math.hypot(myX - serverX, myY - serverY);
+                            
+                            if (positionDiff > 20) {  
+                                console.log(`🔄 RECONCILING! Diff: ${positionDiff.toFixed(2)}`);
+
+                                const unconfirmedInputs = pendingInputs
+                                    .filter(i => i.seq > serverSeq)
+                                    .sort((a, b) => a.seq - b.seq);
+
+                                let lastTime = performance.now();
+                                unconfirmedInputs.forEach((input, index) => {
+                                    const nextTime = index < unconfirmedInputs.length - 1 
+                                        ? unconfirmedInputs[index + 1].timestamp 
+                                        : performance.now();
+                                    const timeDelta = (nextTime - input.timestamp) / 1000;
+                                    
+                                    const moveAmount = SPEED * timeDelta;
+                                    
+                                    if (input.inputs.up) myY -= moveAmount;
+                                    if (input.inputs.down) myY += moveAmount;
+                                    if (input.inputs.left) myX -= moveAmount;
+                                    if (input.inputs.right) myX += moveAmount;
+                                    
+                                    myX = Math.max(20, Math.min(WORLD_WIDTH - 20, myX));
+                                    myY = Math.max(20, Math.min(WORLD_HEIGHT - 20, myY));
+                                });
+                                
+                                console.log(`✅ Reconciled, reapplied ${unconfirmedInputs.length} inputs`);
+                            }
+
+                            pendingInputs = pendingInputs.filter(i => i.seq > serverSeq);
+                        }
+
+                    
+                    }
+
                     updatePlayerInterpolation(data.players || {});
                     updateEnemyInterpolation(data.enemies || []);
-                    updateEnemyBulletInterpolation(enemy_bullets);
 
                     if (isInGame) {
                         updatePlayerStats();
                     }
-                }       
+                }    
 
                 if (data.type === 'player_count') {
                     updateOnlineCount(data.count);
@@ -1548,10 +1225,10 @@
                 if (currentCount !== lastPlayerCount) {
                     if (currentCount > lastPlayerCount) {
                         debug(`➕ Player joined! Total: ${currentCount}`);
-                        chatMessages.unshift(`<span style="color: #4CAF50;">🏷️ Player joined! Total: ${currentCount}</span>`);
+                        chatMessages.unshift(`<span style="color: #4CAF50;">Player joined! Total: ${currentCount}</span>`);
                     } else {
                         debug(`➖ Player left. Total: ${currentCount}`);
-                        chatMessages.unshift(`<span style="color: #ff4444;">👋 Player left. Total: ${currentCount}</span>`);
+                        chatMessages.unshift(`<span style="color: #ff4444;">Player left. Total: ${currentCount}</span>`);
                     }
                     if (chatMessages.length > MAX_CHAT_MESSAGES) chatMessages.pop();
                     chatDiv.innerHTML = chatMessages.map(msg => `<div style="margin:2px 0;">${msg}</div>`).join('');
@@ -1559,11 +1236,23 @@
                 }
 
                 if (data.type === 'chat') {
-                    const message = `[Player${data.playerId}]: ${data.message}`;
-                    chatMessages.unshift(message);
+                    let messageHtml = '';
+                    
+                    if (data.playerId === 'SERVER') {
+                        messageHtml = `<div style="margin:2px 0; color: #FFA500; font-weight: bold; word-break: keep-all;"> ${data.message}</div>`;
+                    } else {
+                        const playerName = data.playerName || `Player${data.playerId}`;
+                        messageHtml = `<div style="margin:2px 0; word-break: keep-all;">[${playerName}]: ${data.message}</div>`;
+                    }
+                    
+                    chatMessages.unshift(messageHtml);
                     if (chatMessages.length > MAX_CHAT_MESSAGES) chatMessages.pop();
+                    
+                    const chatDiv = document.getElementById('chatMessages');
                     if (chatDiv) {
-                        chatDiv.innerHTML = chatMessages.map(msg => `<div style="margin:2px 0;">${msg}</div>`).join('');
+                        chatDiv.innerHTML = chatMessages.map(msg => 
+                            typeof msg === 'string' ? msg : `<div style="margin:2px 0;">${msg}</div>`
+                        ).join('');
                     }
                 }
 
@@ -1575,7 +1264,7 @@
                 }
 
                 if (data.type === 'wave_end') {
-                    document.getElementById('waveDisplay').innerHTML = `✅ WAVE ${data.wave} COMPLETE! +${data.bonus}`;
+                    document.getElementById('waveDisplay').innerHTML = `WAVE ${data.wave} COMPLETE!`;
                     document.getElementById('waveDisplay').style.color = '#4CAF50';
                     
                     if (isGhost) {
@@ -1690,22 +1379,12 @@
             document.getElementById('mainMenu').style.display = 'none';
             document.body.classList.add('game-active');
             canvas.focus();
-            
-            // Show mobile controls when game starts
-            if (isMobile) {
-                document.getElementById('mobileControls').style.display = 'block';
-            }
         }
 
         function showMainMenu() {
             document.getElementById('mainMenu').style.display = 'flex';
             document.body.classList.remove('game-active');
             isInGame = false;
-            
-            // Hide mobile controls when main menu is visible
-            if (isMobile) {
-                document.getElementById('mobileControls').style.display = 'none';
-            }
             
             if (ws) {
                 ws.onmessage = handleMenuMessages;
@@ -1714,8 +1393,14 @@
 
         function setPlayerName() {
             const input = document.getElementById('playerNameInput');
-            currentPlayerName = input.value.trim() || "Player";
-            input.value = currentPlayerName;
+            let newName = input.value.trim();
+            
+            if (newName === "" || newName === "Player" || newName === "player") {
+                newName = "player_" + myId;
+                input.value = newName;
+            }
+            
+            currentPlayerName = newName;
             
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
@@ -1731,324 +1416,12 @@
             document.getElementById('onlinePlayers').textContent = count;
         }
 
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && document.getElementById('mainMenu').style.display !== 'flex') {
-                showMainMenu();
-            }
-        });
-
         document.getElementById('playerNameInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 setPlayerName();
             }
         });
-
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen();
-                } else if (document.documentElement.webkitRequestFullscreen) {
-                    document.documentElement.webkitRequestFullscreen();
-                } else if (document.documentElement.msRequestFullscreen) {
-                    document.documentElement.msRequestFullscreen();
-                }
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                } else if (document.msExitFullscreen) {
-                    document.msExitFullscreen();
-                }
-            }
-        }
-
-        function handleMobileMovement(deltaTime) {
-            if (!isMobile) return;
-            
-            const moveAmount = SPEED * (deltaTime || 0.016);
-            
-            if (movementJoystick.active && movementJoystick.force > 0.1) {
-                const moveX = Math.cos(movementJoystick.angle) * movementJoystick.force * moveAmount;
-                const moveY = Math.sin(movementJoystick.angle) * movementJoystick.force * moveAmount;
-                
-                myX += moveX;
-                myY += moveY;
-            }
-            
-            if (aimJoystick.active && aimJoystick.force > 0.1) {
-                playerAngle = aimJoystick.angle;
-            }
-        }
-
-        function initMobileControls() {
-            if (!isMobile) {
-                document.getElementById('mobileControls').style.display = 'none';
-                return;
-            }
-            
-            // Only show if game is active (main menu not visible)
-            if (document.getElementById('mainMenu').style.display !== 'flex') {
-                document.getElementById('mobileControls').style.display = 'block';
-            }
-            
-            const movementStick = document.getElementById('movementJoystick');
-            const movementHandle = document.getElementById('movementHandle');
-            const aimStick = document.getElementById('aimJoystick');
-            const aimHandle = document.getElementById('aimHandle');
-
-            // Track touch identifiers to prevent interference
-            let movementTouchId = null;
-            let aimTouchId = null;
-
-            movementStick.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                const touch = e.touches[0];
-                movementTouchId = touch.identifier;
-                movementJoystick.active = true;
-                movementStick.classList.add('active');
-                updateMovementJoystick(touch);
-            });
-
-            movementStick.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                // Find the correct touch by identifier
-                for (let i = 0; i < e.touches.length; i++) {
-                    const touch = e.touches[i];
-                    if (touch.identifier === movementTouchId) {
-                        if (movementJoystick.active) {
-                            updateMovementJoystick(touch);
-                        }
-                        break;
-                    }
-                }
-            });
-
-            movementStick.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                // Check if our tracked touch ended
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    const touch = e.changedTouches[i];
-                    if (touch.identifier === movementTouchId) {
-                        resetMovementJoystick();
-                        movementStick.classList.remove('active');
-                        movementTouchId = null;
-                        break;
-                    }
-                }
-            });
-
-            movementStick.addEventListener('touchcancel', (e) => {
-                e.preventDefault();
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    const touch = e.changedTouches[i];
-                    if (touch.identifier === movementTouchId) {
-                        resetMovementJoystick();
-                        movementStick.classList.remove('active');
-                        movementTouchId = null;
-                        break;
-                    }
-                }
-            });
-
-            aimStick.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                const touch = e.touches[0];
-                aimTouchId = touch.identifier;
-                aimJoystick.active = true;
-                aimStick.classList.add('active');
-                updateAimJoystick(touch);
-            });
-
-            aimStick.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-                // Find the correct touch by identifier
-                for (let i = 0; i < e.touches.length; i++) {
-                    const touch = e.touches[i];
-                    if (touch.identifier === aimTouchId) {
-                        if (aimJoystick.active) {
-                            updateAimJoystick(touch);
-                        }
-                        break;
-                    }
-                }
-            });
-
-            aimStick.addEventListener('touchend', (e) => {
-                e.preventDefault();
-                // Check if our tracked touch ended
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    const touch = e.changedTouches[i];
-                    if (touch.identifier === aimTouchId) {
-                        resetAimJoystick();
-                        aimStick.classList.remove('active');
-                        aimTouchId = null;
-                        break;
-                    }
-                }
-            });
-
-            aimStick.addEventListener('touchcancel', (e) => {
-                e.preventDefault();
-                for (let i = 0; i < e.changedTouches.length; i++) {
-                    const touch = e.changedTouches[i];
-                    if (touch.identifier === aimTouchId) {
-                        resetAimJoystick();
-                        aimStick.classList.remove('active');
-                        aimTouchId = null;
-                        break;
-                    }
-                }
-            });
-        }
-
-        function updateMovementJoystick(touch) {
-            const movementStick = document.getElementById('movementJoystick');
-            const movementHandle = document.getElementById('movementHandle');
-            
-            if (!movementStick || !movementHandle) return;
-            
-            const rect = movementStick.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            
-            let dx = touch.clientX - centerX;
-            let dy = touch.clientY - centerY;
-            const distance = Math.hypot(dx, dy);
-            const maxDistance = rect.width / 2 - movementHandle.offsetWidth / 2;
-            
-            if (distance > maxDistance) {
-                const angle = Math.atan2(dy, dx);
-                dx = Math.cos(angle) * maxDistance;
-                dy = Math.sin(angle) * maxDistance;
-            }
-            
-            movementJoystick.angle = Math.atan2(dy, dx);
-            movementJoystick.force = Math.min(distance / maxDistance, 1);
-            movementJoystick.x = dx;
-            movementJoystick.y = dy;
-            
-            movementHandle.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
-        }
-
-        function resetMovementJoystick() {
-            const movementHandle = document.getElementById('movementHandle');
-            if (movementHandle) {
-                movementHandle.style.transform = 'translate3d(0px, 0px, 0)';
-            }
-            movementJoystick.active = false;
-            movementJoystick.force = 0;
-            movementJoystick.x = 0;
-            movementJoystick.y = 0;
-            movementJoystick.angle = 0;
-        }
-
-        function updateAimJoystick(touch) {
-            const aimStick = document.getElementById('aimJoystick');
-            const aimHandle = document.getElementById('aimHandle');
-            
-            if (!aimStick || !aimHandle) return;
-            
-            const rect = aimStick.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            
-            let dx = touch.clientX - centerX;
-            let dy = touch.clientY - centerY;
-            const distance = Math.hypot(dx, dy);
-            const maxDistance = rect.width / 2 - aimHandle.offsetWidth / 2;
-            
-            if (distance > maxDistance) {
-                const angle = Math.atan2(dy, dx);
-                dx = Math.cos(angle) * maxDistance;
-                dy = Math.sin(angle) * maxDistance;
-            }
-            
-            aimJoystick.angle = Math.atan2(dy, dx);
-            aimJoystick.force = Math.min(distance / maxDistance, 1);
-            aimJoystick.x = dx;
-            aimJoystick.y = dy;
-            
-            aimHandle.style.transform = `translate3d(${dx}px, ${dy}px, 0)`;
-            
-            if (!isFiring && !isGhost && aimJoystick.force > 0.1) {
-                isFiring = true;
-                startFiring();
-            }
-        }
-
-        function resetAimJoystick() {
-            const aimHandle = document.getElementById('aimHandle');
-            if (aimHandle) {
-                aimHandle.style.transform = 'translate3d(0px, 0px, 0)';
-            }
-            aimJoystick.active = false;
-            aimJoystick.force = 0;
-            aimJoystick.x = 0;
-            aimJoystick.y = 0;
-            aimJoystick.angle = 0;
-            
-            if (isFiring) {
-                isFiring = false;
-                if (fireInterval) {
-                    clearInterval(fireInterval);
-                    fireInterval = null;
-                }
-            }
-        }
-
-        function startFiring() {
-            if (fireInterval) clearInterval(fireInterval);
-            
-            fireInterval = setInterval(() => {
-                if (isFiring && myId && isConnected && !isGhost) {
-                    const now = Date.now();
-                    if (now - lastShotTime >= SHOT_COOLDOWN) {
-                        lastShotTime = now;
-                        
-                        let worldX, worldY;
-                        
-                        if (isMobile) {
-                            if (aimJoystick.active && aimJoystick.force > 0.1) {
-                                worldX = myX + Math.cos(aimJoystick.angle) * 1000;
-                                worldY = myY + Math.sin(aimJoystick.angle) * 1000;
-                            } else {
-                                worldX = myX + Math.cos(playerAngle) * 1000;
-                                worldY = myY + Math.sin(playerAngle) * 1000;
-                            }
-                        } else {
-                            const rect = canvas.getBoundingClientRect();
-                            worldX = lastMouseX - rect.left + cameraX;
-                            worldY = lastMouseY - rect.top + cameraY;
-                        }
-                        
-                        const dx = worldX - myX;
-                        const dy = worldY - myY;
-                        const distance = Math.hypot(dx, dy);
-                        
-                        if (distance >= 10) {
-                            const bullet = {
-                                id: Math.random().toString(36).substr(2, 9),
-                                x: myX,
-                                y: myY,
-                                vx: (dx / distance) * BULLET_SPEED,
-                                vy: (dy / distance) * BULLET_SPEED,
-                                owner: myId,
-                                damage: DAMAGE,
-                                createdAt: now,
-                                size: BULLET_SIZE,
-                                color: '#ffff00'
-                            };
-                            
-                            ws.send(JSON.stringify({type: 'shoot', bullet}));
-                        }
-                    }
-                }
-            }, 16);
-        }
-
-        initMobileControls();
 
         function sendChatMessage() {
             const input = document.getElementById('chatInput');
@@ -2135,7 +1508,58 @@
             }
         }
 
-        // OPTIMIZATION: Pre-allocate arrays for drawing
+        function startPingSystem() {
+            sendPing();
+            
+            setInterval(() => {
+                if (isConnected && ws && ws.readyState === WebSocket.OPEN) {
+                    sendPing();
+                }
+            }, PING_INTERVAL);
+        }
+
+        function sendPing() {
+            lastPingSent = performance.now();
+            ws.send(JSON.stringify({
+                type: 'ping',
+                sent: lastPingSent
+            }));
+        }
+
+        function calculatePing(sentTime) {
+            const receivedTime = performance.now();
+            const currentPing = receivedTime - sentTime;
+
+            pingHistory.push(currentPing);
+            if (pingHistory.length > PING_HISTORY_MAX) {
+                pingHistory.shift();
+            }
+
+            ping = Math.round(pingHistory.reduce((a, b) => a + b, 0) / pingHistory.length);
+
+            updateDebugDisplay();
+        }
+
+        function updateDebugDisplay() {
+            const debugEl = document.getElementById('debug');
+            if (debugVisible) {
+                const debugText = `
+                    <div style="color: #0f0;">PING: ${ping}ms</div>
+                    <div>FPS: ${frameCount}</div>
+                    <div>Players: ${Object.keys(players).length}</div>
+                    <div>Enemies: ${enemies.length}</div>
+                    <div>Bullets: ${bullets.length}</div>
+                    <div>Enemy Bullets: ${enemy_bullets.length}</div>
+                    <div>Update Rate: ${UPDATE_RATE}ms</div>
+                    <div>isInGame: ${isInGame}</div>
+                    <div>isConnected: ${isConnected}</div>
+                    <div>myId: ${myId}</div>
+                `;
+                
+                debugEl.innerHTML = debugText;
+            }
+        }
+
         const visibleEnemies = [];
         const visibleBullets = [];
         const visibleEnemyBullets = [];
@@ -2383,6 +1807,10 @@
         function updateEnemyBulletInterpolation(newEnemyBullets) {
             const now = performance.now();
             
+            if (Math.abs(interpolatedEnemyBullets.length - newEnemyBullets.length) > 10) {
+                console.log(`Bullet count changed: ${interpolatedEnemyBullets.length} -> ${newEnemyBullets.length}`);
+            }
+            
             for (let newBullet of newEnemyBullets) {
                 let existingBullet = interpolatedEnemyBullets.find(b => b.id === newBullet.id);
                 
@@ -2397,6 +1825,9 @@
                     existingBullet.maxLifetime = newBullet.maxLifetime;
                     existingBullet.shrinkStart = newBullet.shrinkStart;
                     existingBullet.boss_phase = newBullet.boss_phase;
+      
+                    existingBullet.vx = newBullet.vx;
+                    existingBullet.vy = newBullet.vy;
                     
                     if (!existingBullet.createdAt) {
                         existingBullet.createdAt = now;
@@ -2411,29 +1842,62 @@
                         createdAt: now,
                         infinite_range: newBullet.infinite_range || false,
                         maxLifetime: newBullet.maxLifetime,
-                        shrinkStart: newBullet.shrinkStart
+                        shrinkStart: newBullet.shrinkStart,
+                        vx: newBullet.vx,
+                        vy: newBullet.vy
                     });
                 }
             }
             
+            const beforeCount = interpolatedEnemyBullets.length;
             interpolatedEnemyBullets = interpolatedEnemyBullets.filter(b => 
                 newEnemyBullets.some(nb => nb.id === b.id)
             );
+            
+            if (beforeCount !== interpolatedEnemyBullets.length) {
+                console.log(`Removed ${beforeCount - interpolatedEnemyBullets.length} bullets`);
+            }
         }
 
         function interpolateEnemyBullets() {
-            const factor = 0.3; 
-            
             for (let bullet of interpolatedEnemyBullets) {
-                if (bullet.targetX !== undefined) {
-                    bullet.renderX += (bullet.targetX - bullet.renderX) * factor;
-                    bullet.renderY += (bullet.targetY - bullet.renderY) * factor;
+                if (bullet.targetX === undefined) continue;
+
+                const dx = bullet.targetX - bullet.renderX;
+                const dy = bullet.targetY - bullet.renderY;
+                const distToTarget = Math.hypot(dx, dy);
+                
+                if (distToTarget < 1) {
+                    bullet.renderX = bullet.targetX;
+                    bullet.renderY = bullet.targetY;
+                    continue;
                 }
+                
+            
+                let factor;
+                if (distToTarget > 100) {
+                    factor = 0.3;  
+                } else if (distToTarget > 50) {
+                    factor = 0.2;  
+                } else {
+                    factor = 0.1; 
+                }
+                
+                bullet.renderX += dx * factor;
+                bullet.renderY += dy * factor;
+                
+                if (bullet.vx && bullet.vy) {
+                    bullet.renderX += bullet.vx * 0.008;  
+                    bullet.renderY += bullet.vy * 0.008;
+                }
+
             }
         }
 
         function updateBulletInterpolation(newBullets) {
             const now = performance.now();
+        
+            const hitBullets = newBullets.filter(b => b.hit === true);
             
             for (let newBullet of newBullets) {
                 let existingBullet = interpolatedBullets.find(b => b.id === newBullet.id);
@@ -2441,20 +1905,20 @@
                 if (existingBullet) {
                     existingBullet.targetX = newBullet.x;
                     existingBullet.targetY = newBullet.y;
-                    existingBullet.color = newBullet.color;
-                    existingBullet.size = newBullet.size;
-                    if (!existingBullet.createdAt) {
-                        existingBullet.createdAt = now;
-                    }
+                    existingBullet.hit = newBullet.hit;
+                    existingBullet.hit_time = newBullet.hit_time;
                 } else {
                     interpolatedBullets.push({
-                        ...newBullet,
+                        id: newBullet.id,
                         renderX: newBullet.x,
                         renderY: newBullet.y,
                         targetX: newBullet.x,
                         targetY: newBullet.y,
-                        createdAt: now,
-                        maxLifetime: 3000
+                        owner: newBullet.owner, 
+                        vx: newBullet.vx,         
+                        vy: newBullet.vy,
+                        hit: newBullet.hit,       
+                        hit_time: newBullet.hit_time
                     });
                 }
             }
@@ -2465,13 +1929,13 @@
         }
 
         function interpolateBullets() {
-            const factor = 0.3;
-            
             for (let bullet of interpolatedBullets) {
-                if (bullet.targetX !== undefined) {
-                    bullet.renderX += (bullet.targetX - bullet.renderX) * factor;
-                    bullet.renderY += (bullet.targetY - bullet.renderY) * factor;
-                }
+                if (bullet.targetX === undefined) continue;
+                
+                const factor = 0.1; 
+                
+                bullet.renderX += (bullet.targetX - bullet.renderX) * factor;
+                bullet.renderY += (bullet.targetY - bullet.renderY) * factor;
             }
         }
 
@@ -2505,53 +1969,54 @@
 
         // Input Events
         document.addEventListener('keydown', (e) => {
-            const isTyping = document.activeElement === document.getElementById('playerNameInput') ||
-                            document.activeElement === document.getElementById('chatInput');
+        const isTyping = document.activeElement === document.getElementById('playerNameInput') ||
+                        document.activeElement === document.getElementById('chatInput');
+        
+        if (e.key === 'Escape') {
+            const chatContainer = document.getElementById('chatContainer');
+            if (!chatContainer.classList.contains('collapsed')) {
+                document.getElementById('chatInput').blur();
+                chatContainer.classList.add('collapsed');
+                e.preventDefault(); 
+            }
+        }
+        
+        if (isTyping) {
+            return;
+        }
+        
+        keys[e.key] = true;
+        if (['w','a','s','d','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+        if (e.key === 'e' || e.key === 'E') spawnBoss();
+        
+        if (e.code === 'Backquote') {
+            e.preventDefault();
+            debugVisible = !debugVisible;
+            document.getElementById('debug').style.display = debugVisible ? 'block' : 'none';
+            document.getElementById('fps').style.display = debugVisible ? 'block' : 'none';
+        }
+
+        if (e.key === 'Enter') {
+            const chatContainer = document.getElementById('chatContainer');
+            const chatInput = document.getElementById('chatInput');
             
-            if (e.key === 'Escape') {
-                const chatContainer = document.getElementById('chatContainer');
-                if (!chatContainer.classList.contains('collapsed')) {
-                    document.getElementById('chatInput').blur();
+            if (document.activeElement === chatInput) {
+                e.preventDefault();
+                sendChatMessage();
+            } 
+            else {
+                e.preventDefault();
+                
+                if (chatContainer.classList.contains('collapsed')) {
+                    chatContainer.classList.remove('collapsed');
+                    setTimeout(() => chatInput.focus(), 200);
+                } else {
+                    chatInput.blur();
                     chatContainer.classList.add('collapsed');
                 }
             }
-            
-            if (isTyping) {
-                return;
-            }
-            
-            keys[e.key] = true;
-            if (['w','a','s','d','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
-            if (e.key === 'e' || e.key === 'E') spawnBoss();
-            
-            if (e.code === 'Backquote') {
-                e.preventDefault();
-                debugVisible = !debugVisible;
-                document.getElementById('debug').style.display = debugVisible ? 'block' : 'none';
-                document.getElementById('fps').style.display = debugVisible ? 'block' : 'none';
-            }
-
-            if (e.key === 'Enter') {
-                const chatContainer = document.getElementById('chatContainer');
-                const chatInput = document.getElementById('chatInput');
-                
-                if (document.activeElement === chatInput) {
-                    e.preventDefault();
-                    sendChatMessage();
-                } 
-                else {
-                    e.preventDefault();
-                    
-                    if (chatContainer.classList.contains('collapsed')) {
-                        chatContainer.classList.remove('collapsed');
-                        setTimeout(() => chatInput.focus(), 200);
-                    } else {
-                        chatInput.blur();
-                        chatContainer.classList.add('collapsed');
-                    }
-                }
-            }
-        });
+        }
+    });
 
         document.addEventListener('keyup', (e) => {
             const isTyping = document.activeElement === document.getElementById('playerNameInput') ||
@@ -2651,7 +2116,6 @@
         }, 100);
 
         function gameLoop() {
-
             if (cameraX === 0 && cameraY === 0 && myId) {
                 cameraX = myX - canvas.width / 2;
                 cameraY = myY - canvas.height / 2;
@@ -2681,7 +2145,7 @@
             }
 
             const mainMenuVisible = document.getElementById('mainMenu').style.display !== 'none';
-    
+
             if (mainMenuVisible) {
                 menuCameraAngle += MENU_CAMERA_SPEED * deltaTime;
                 
@@ -2707,53 +2171,89 @@
             cameraX += (targetCameraX - cameraX) * CAMERA_SMOOTH;
             cameraY += (targetCameraY - cameraY) * CAMERA_SMOOTH;
 
+            // ============= MOVEMENT AND PREDICTION =============
             if (myId && !mainMenuVisible) {
-                const moveAmount = SPEED * deltaTime;
+                // Collect current input state
+                const currentInput = {
+                    up: keys['w'] || keys['ArrowUp'] || keys['W'],
+                    down: keys['s'] || keys['ArrowDown'] || keys['S'],
+                    left: keys['a'] || keys['ArrowLeft'] || keys['A'],
+                    right: keys['d'] || keys['ArrowRight'] || keys['D'],
+                    mouseAngle: playerAngle,
+                    shooting: isFiring
+                };
                 
-                if (keys['w'] || keys['ArrowUp'] || keys['W']) myY -= moveAmount;
-                if (keys['s'] || keys['ArrowDown'] || keys['S']) myY += moveAmount;
-                if (keys['a'] || keys['ArrowLeft'] || keys['A']) myX -= moveAmount;
-                if (keys['d'] || keys['ArrowRight'] || keys['D']) myX += moveAmount;
-                
-                if (isMobile) {
-                    handleMobileMovement(deltaTime);
-                }
-                
-                myX = Math.max(20, Math.min(WORLD_WIDTH - 20, myX));
-                myY = Math.max(20, Math.min(WORLD_HEIGHT - 20, myY));
-            }
-
-            if (isConnected) {
+                const hasInput = currentInput.up || currentInput.down || currentInput.left || currentInput.right;
                 const timeToSend = now - lastUpdateTime > UPDATE_RATE;
-                const positionChanged = Math.abs(myX - lastSentX) > 1 || Math.abs(myY - lastSentY) > 1;
-                const angleChanged = Math.abs(playerAngle - lastSentAngle) > 0.05;
+                
+                if (!justRespawned && (hasInput || timeToSend)) {
+                    const beforeX = myX;
+                    const beforeY = myY;
+                    
+                    // Apply movement immediately (PREDICTION)
+                    const moveAmount = SPEED * deltaTime;
+                    if (currentInput.up) myY -= moveAmount;
+                    if (currentInput.down) myY += moveAmount;
+                    if (currentInput.left) myX -= moveAmount;
+                    if (currentInput.right) myX += moveAmount;
+                    
+                    // Clamp position
+                    myX = Math.max(20, Math.min(WORLD_WIDTH - 20, myX));
+                    myY = Math.max(20, Math.min(WORLD_HEIGHT - 20, myY));
+                    
+                    // Create input record
+                    const inputRecord = {
+                        seq: inputSequence++,
+                        x: myX,
+                        y: myY,
+                        angle: playerAngle,
+                        inputs: { ...currentInput },
+                        timestamp: now
+                    };
 
-                if (!justRespawned && (timeToSend || positionChanged || angleChanged)) {
-                    lastUpdateTime = now;
-                    lastSentX = myX;
-                    lastSentY = myY;
-                    lastSentAngle = playerAngle;
-
-                    ws.send(JSON.stringify({
-                        type: 'move',
-                        x: Math.round(myX),
-                        y: Math.round(myY),
+                    // Store in history
+                    positionHistory.push({
+                        seq: inputRecord.seq,
+                        x: beforeX,
+                        y: beforeY,
                         angle: playerAngle
+                    });
+                    
+                    pendingInputs.push(inputRecord);
+                    
+                    // Send to server
+                    ws.send(JSON.stringify({
+                        type: 'move_predicted',
+                        seq: inputRecord.seq,
+                        x: myX,
+                        y: myY,
+                        angle: playerAngle,
+                        inputs: currentInput
                     }));
+                    
+                    lastUpdateTime = now;
+
+                    // Limit history size
+                    if (positionHistory.length > MAX_HISTORY_SIZE) {
+                        positionHistory.shift();
+                    }
+                    if (pendingInputs.length > MAX_HISTORY_SIZE) {
+                        pendingInputs.shift();
+                    }
                 }
             }
 
-            cameraX += (targetCameraX - cameraX) * CAMERA_SMOOTH;
-            cameraY += (targetCameraY - cameraY) * CAMERA_SMOOTH;
-
+            // Run interpolation
             interpolateEnemies();
             interpolatePlayers();
             interpolateEnemyBullets();
             interpolateBullets();
             
+            // ============= DRAWING =============
             ctx.save();
             ctx.translate(-cameraX, -cameraY);
 
+            // Draw void boundaries
             ctx.fillStyle = VOID_COLOR;
             const visibleLeft = cameraX;
             const visibleTop = cameraY;
@@ -2765,6 +2265,7 @@
             if (visibleTop < 0) ctx.fillRect(Math.max(0, visibleLeft), visibleTop, Math.min(WORLD_WIDTH, visibleRight) - Math.max(0, visibleLeft), -visibleTop);
             if (visibleBottom > WORLD_HEIGHT) ctx.fillRect(Math.max(0, visibleLeft), WORLD_HEIGHT, Math.min(WORLD_WIDTH, visibleRight) - Math.max(0, visibleLeft), visibleBottom - WORLD_HEIGHT);
 
+            // Draw grid
             ctx.strokeStyle = GRID_COLOR;
             ctx.lineWidth = 1;
             const startX = Math.floor(Math.max(0, cameraX) / 50) * 50;
@@ -2786,6 +2287,7 @@
                 ctx.stroke();
             }
             
+            // Draw enemies
             for (let enemy of interpolatedEnemies) {
                 let drawX = enemy.renderX;
                 let drawY = enemy.renderY;
@@ -2823,6 +2325,7 @@
                 }
             }
             
+            // Eye tracking setup
             const localEyeId = 'local';
             if (!window.eyeTargets[localEyeId]) {
                 window.eyeTargets[localEyeId] = { x: mouseWorldX, y: mouseWorldY, targetX: mouseWorldX, targetY: mouseWorldY };
@@ -2864,6 +2367,7 @@
             const localEyeX = window.eyeTargets[localEyeId].x;
             const localEyeY = window.eyeTargets[localEyeId].y;
 
+            // Draw other players
             for (let id in interpolatedPlayers) {
                 const p = interpolatedPlayers[id];
                 const eyeId = `player_${id}`;
@@ -2874,8 +2378,6 @@
                     window.eyeTargets[eyeId] = { x: p.renderX, y: p.renderY, targetX: p.renderX, targetY: p.renderY };
                 }
 
-                let lookX = p.renderX + Math.cos(p.renderAngle) * 100;
-                let lookY = p.renderY + Math.sin(p.renderAngle) * 100;
                 let closestDist = Infinity;
                 let closestTarget = null;
 
@@ -2977,6 +2479,7 @@
                 }
             }
 
+            // Draw death animation
             if (playerDeathAnimation) {
                 const now = performance.now();
                 const progress = (now - playerDeathAnimation.startTime) / playerDeathAnimation.duration;
@@ -2994,6 +2497,7 @@
                 }
             }
             
+            // Draw YOUR player
             if (myId && players[myId] && (!isDead || playerDeathAnimation)) {
                 const playerName = players[myId].name || currentPlayerName || `Player ${myId}`;
                 
@@ -3007,6 +2511,30 @@
                     const nameWidth = ctx.measureText(playerName).width;
                     ctx.fillText(playerName, myX - nameWidth/2, myY - 40);
                 } else {
+                    if (players[myId].immune) {
+                        ctx.save();
+                        ctx.translate(myX, myY);
+                        ctx.globalAlpha = 0.3 + Math.sin(Date.now() * 0.01) * 0.2;
+                        ctx.strokeStyle = '#4CAF50';
+                        ctx.lineWidth = 3;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 25, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.restore();
+                    } 
+                    else if (players[myId].stealth) {
+                        ctx.save();
+                        ctx.translate(myX, myY);
+                        ctx.globalAlpha = 0.2 + Math.sin(Date.now() * 0.005) * 0.1;
+                        ctx.strokeStyle = '#44AAFF';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 25, 0, Math.PI * 2);
+                        ctx.stroke();
+
+                        ctx.restore();
+                    }
+                    
                     drawPlayer(myX, myY, '#ff4444', true, playerAngle, localEyeX, localEyeY);
                     
                     const health = players[myId].health || 100;
@@ -3022,15 +2550,72 @@
                 }
             }
 
-            ctx.fillStyle = '#ffff00';
+            // Draw server position debug marker
+            if (debugVisible && lastServerPosition.x !== 0) {
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+                ctx.beginPath();
+                ctx.arc(lastServerPosition.x, lastServerPosition.y, 10, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.strokeStyle = 'yellow';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(myX, myY);
+                ctx.lineTo(lastServerPosition.x, lastServerPosition.y);
+                ctx.stroke();
+            }
+
             for (let b of interpolatedBullets) {
                 if (b && b.renderX !== undefined && b.renderY !== undefined) {
-                    ctx.beginPath();
-                    ctx.arc(b.renderX, b.renderY, BULLET_SIZE, 0, Math.PI * 2);
-                    ctx.fill();
+                    const now = Date.now();
+                    
+                    let currentSize = BULLET_SIZE;
+                    let currentAlpha = 1.0;
+                    let bulletColor = b.color || '#ffff00';
+
+                    if (b.hit === true) {
+                        const hitTime = b.hit_time * 1000;
+                        const timeSinceHit = now - hitTime;
+                        const shrinkDuration = 200;
+                        
+                        console.log('Hit bullet timing:', {
+                            now,
+                            hitTime,
+                            timeSinceHit,
+                            willDraw: timeSinceHit > 0 && timeSinceHit < shrinkDuration
+                        });
+                        
+                        if (timeSinceHit > 0 && timeSinceHit < shrinkDuration) {
+                            const shrinkFactor = 1.0 - (timeSinceHit / shrinkDuration);
+                            currentSize = BULLET_SIZE * shrinkFactor;
+                            currentAlpha = shrinkFactor;
+                            bulletColor = '#ffaa00'; 
+                        } else {
+                            continue;
+                        }
+                    }
+                    
+                    if (currentSize > 0.5) {
+                        ctx.save();
+                        ctx.translate(b.renderX, b.renderY);
+                        ctx.globalAlpha = currentAlpha;
+
+                        if (b.vx !== 0 || b.vy !== 0) {
+                            const angle = Math.atan2(b.vy, b.vx);
+                            ctx.rotate(angle);
+                        }
+
+                        ctx.fillStyle = bulletColor;
+                        ctx.beginPath();
+                        ctx.ellipse(0, 0, currentSize * 1.5, currentSize * 0.8, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        ctx.restore();
+                    }
                 }
             }
 
+            // Draw enemy bullets
             for (let b of interpolatedEnemyBullets) {
                 const now = performance.now();
                 
@@ -3070,9 +2655,10 @@
 
             ctx.restore();
 
+            // FPS counter
             frameCount++;
             if (nowPerf - lastFpsUpdate >= 1000) {
-                domElements.fps.innerHTML = `FPS: ${frameCount}`;
+                domElements.fps.innerHTML = `FPS: ${frameCount} | PING: ${ping}ms`;
                 frameCount = 0;
                 lastFpsUpdate = nowPerf;
             }
