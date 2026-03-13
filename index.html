@@ -450,7 +450,7 @@
             border-radius: 5px;
             font-family: monospace;
             font-size: 14px;
-            display: none;
+            display: block;
         }
         
         #debug {
@@ -531,8 +531,66 @@
             word-wrap: break-word;      
             word-break: keep-all;       
             white-space: normal;       
-            line-height: 1.3;      
-            overflow: hidden;     
+            line-height: 1.3;
+            
+            scrollbar-width: thin;
+            scrollbar-color: rgba(76, 175, 80, 0.3) rgba(0, 0, 0, 0.1); 
+        }
+
+        #chatMessages::-webkit-scrollbar {
+            width: 4px; 
+        }
+
+        #chatMessages::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+        }
+
+        #chatMessages::-webkit-scrollbar-thumb {
+            background: rgba(76, 175, 80, 0.3);
+            border-radius: 4px;
+        }
+
+        #chatMessages::-webkit-scrollbar-thumb:hover {
+            background: rgba(76, 175, 80, 0.5);
+        }
+
+        #chatMessages {
+            scrollbar-width: thin;
+            scrollbar-color: transparent transparent;  
+        }
+
+        #chatMessages:hover {
+            scrollbar-color: rgba(76, 175, 80, 0.3) rgba(0, 0, 0, 0.1);  
+        }
+
+        #chatMessages::-webkit-scrollbar-thumb {
+            background: transparent; 
+        }
+
+        #chatMessages:hover::-webkit-scrollbar-thumb {
+            background: rgba(76, 175, 80, 0.3); 
+        }
+
+        #chatMessages:hover::-webkit-scrollbar-thumb:hover {
+            background: rgba(76, 175, 80, 0.5);
+        }
+
+        #chatMessages::after {
+            content: '';
+            position: absolute;
+            bottom: 40px;  
+            left: 0;
+            right: 0;
+            height: 20px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.2));
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #chatMessages.can-scroll::after {
+            opacity: 1;
         }
 
         .chat-input-container {
@@ -703,6 +761,7 @@
             resizeTimeout = setTimeout(() => {
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight;
+                updateChatScrollIndicator();
             }, 100);
         });
         canvas.width = window.innerWidth;
@@ -742,7 +801,10 @@
         let positionHistory = [];           
         let lastConfirmedSeq = 0;          
         let lastServerPosition = { x: 0, y: 0 };
-        const MAX_HISTORY_SIZE = 100;    
+        const MAX_HISTORY_SIZE = 100;
+        let initialPositionSet = false;   
+        let lastBulletRequest = 0;
+        const BULLET_REQUEST_INTERVAL = 100
 
         // Movement
         const SPEED = 110;
@@ -778,8 +840,16 @@
         let isFiring = false;      
         let fireInterval = null;
         const DAMAGE = 5;
-        const BULLET_SPEED = 600;
+        const BULLET_SPEED = 400;
         const BULLET_SIZE = 5;
+        const HIT_ANIMATION_DURATION = 200; 
+        let interpolatedBullets = new Map(); 
+        let interpolatedEnemyBullets = new Map();
+        let dyingBullets = [];
+        let dyingEnemyBullets = [];
+        let localBulletId = 0;
+        let bulletPositionHistory = new Map();
+        const POSITION_HISTORY_DURATION = 500;
 
         // Enemies
         let enemies = [];
@@ -790,8 +860,6 @@
         // Interpolation
         let interpolatedEnemies = [];
         let interpolatedPlayers = {};
-        let interpolatedBullets = []; 
-        let interpolatedEnemyBullets = [];
         
         // Mouse
         let mouseScreenX = 400, mouseScreenY = 300;
@@ -807,6 +875,7 @@
         // FPS
         let frameCount = 0;
         let lastFpsUpdate = performance.now();
+        let fps = 0;
 
         // OPTIMIZATION: Object pools for frequent allocations
         const bulletPool = [];
@@ -988,6 +1057,10 @@
 
                 if (data.type === 'init') {
                     myId = data.id;
+                    myX = data.x;
+                    myY = data.y; 
+                    playerAngle = data.angle || 0;
+                    initialPositionSet = true;
                     debug('✅ Got ID:', myId);
                     
                     document.getElementById('stateDisplay').classList.add('hidden');
@@ -1002,27 +1075,23 @@
                     updateLeaderboardDisplay(data.leaderboard);
                 }
 
-                if (data.type === 'bullet_update') {
-                    bullets = data.bullets || [];
-                    enemy_bullets = data.enemy_bullets || [];
-
-                     const hitBullets = bullets.filter(b => b.hit === true);
-                    if (hitBullets.length > 0) {
-                        console.log('🔥 HIT BULLETS RECEIVED:', hitBullets.map(b => ({
-                            id: b.id,
-                            hit: b.hit,
-                            hit_time: b.hit_time,
-                            current_time: Date.now() / 1000,
-                            age: Date.now() / 1000 - b.hit_time
-                        })));
+                if (data.type === 'bullet_update' || data.type === 'bullets') {
+                    if (data.bullets) {
+                        bullets = data.bullets;
+                        updateBulletInterpolation(bullets);
                     }
-                    
-                    updateBulletInterpolation(bullets);
-                    updateEnemyBulletInterpolation(enemy_bullets);
+                    if (data.enemy_bullets) {
+                        enemy_bullets = data.enemy_bullets;
+                        updateEnemyBulletInterpolation(enemy_bullets);
+                    }
                 }
-
                 if (data.type === 'update') {
                     const serverSeq = data.last_processed_seq || 0;
+                    // Always initialize with empty arrays if not provided
+                    bullets = data.bullets || [];
+                    enemy_bullets = data.enemy_bullets || [];
+                    updateBulletInterpolation(bullets);
+                    updateEnemyBulletInterpolation(enemy_bullets);
   
                     enemies = data.enemies || [];
                     players = data.players || {};
@@ -1039,8 +1108,14 @@
                             players[myId].angle = serverAngle;
                         }
 
-                        myX = serverX;
-                        myY = serverY;
+                        if (Math.hypot(myX - serverX, myY - serverY) > 50) {
+                            const correctionSpeed = 0.3;
+                            myX += (serverX - myX) * correctionSpeed;
+                            myY += (serverY - myY) * correctionSpeed;
+                        } else {
+                            myX += (serverX - myX) * 0.1;
+                            myY += (serverY - myY) * 0.1;
+                        }
                         playerAngle = serverAngle;
 
                         if (serverSeq > lastConfirmedSeq) {
@@ -1100,6 +1175,20 @@
                     document.body.classList.remove('game-active');
                     isInGame = false;
                     showMainMenu();
+                }
+
+                if (data.type === 'countdown_start') {
+                    countdownActive = true;
+                    document.getElementById('waveDisplay').innerHTML = `RESTARTING IN 20s`;
+                    document.getElementById('waveDisplay').style.color = '#FFA500';
+                }
+
+                if (data.type === 'countdown_tick') {
+                    if (data.seconds > 0) {
+                        document.getElementById('waveDisplay').innerHTML = `RESTARTING IN ${data.seconds}s`;
+                    } else {
+                        document.getElementById('waveDisplay').innerHTML = `RESPAWNING...`;
+                    }
                 }
                 
                 if (data.type === 'respawn') {
@@ -1233,6 +1322,8 @@
                     if (chatMessages.length > MAX_CHAT_MESSAGES) chatMessages.pop();
                     chatDiv.innerHTML = chatMessages.map(msg => `<div style="margin:2px 0;">${msg}</div>`).join('');
                     lastPlayerCount = currentCount;
+                    updateChatScrollIndicator();
+
                 }
 
                 if (data.type === 'chat') {
@@ -1253,6 +1344,7 @@
                         chatDiv.innerHTML = chatMessages.map(msg => 
                             typeof msg === 'string' ? msg : `<div style="margin:2px 0;">${msg}</div>`
                         ).join('');
+                        updateChatScrollIndicator();
                     }
                 }
 
@@ -1512,10 +1604,10 @@
             sendPing();
             
             setInterval(() => {
-                if (isConnected && ws && ws.readyState === WebSocket.OPEN) {
-                    sendPing();
+                if (ws && ws.readyState === WebSocket.OPEN && isInGame) {
+                    ws.send(JSON.stringify({ type: 'request_bullet_update' }));
                 }
-            }, PING_INTERVAL);
+            }, 50);
         }
 
         function sendPing() {
@@ -1545,7 +1637,7 @@
             if (debugVisible) {
                 const debugText = `
                     <div style="color: #0f0;">PING: ${ping}ms</div>
-                    <div>FPS: ${frameCount}</div>
+                    <div>FPS: ${fps}</div>
                     <div>Players: ${Object.keys(players).length}</div>
                     <div>Enemies: ${enemies.length}</div>
                     <div>Bullets: ${bullets.length}</div>
@@ -1558,6 +1650,45 @@
                 
                 debugEl.innerHTML = debugText;
             }
+        }
+
+        function updateChatScrollIndicator() {
+            const chatDiv = document.getElementById('chatMessages');
+            if (chatDiv.scrollHeight > chatDiv.clientHeight) {
+                chatDiv.classList.add('can-scroll');
+            } else {
+                chatDiv.classList.remove('can-scroll');
+            }
+        }
+
+        function processHitBullets(bulletsArray, isEnemy) {
+            if (!bulletsArray) return;
+            
+            bulletsArray.forEach(b => {
+                if (isEnemy && b && b.hit) {
+                    console.log('CLIENT: Received hit enemy bullet', b.id, 'hit_time=', b.hit_time);
+                }
+            });
+            
+            const now = Date.now();
+            bulletsArray.forEach(b => {
+                if (b && b.hit && b.hit_time) {
+                    const hitTime = b.hit_time * 1000;
+                    const list = isEnemy ? dyingEnemyBullets : dyingBullets;
+                    if (!list.some(db => db && db.id === b.id)) {
+                        list.push({
+                            id: b.id,
+                            x: b.x,
+                            y: b.y,
+                            hitTime: hitTime,
+                            size: (b && b.size) || (isEnemy ? 8 : 5),
+                            color: (b && b.color) || (isEnemy ? '#ff00ff' : '#ffff00'),
+                            vx: (b && b.vx) || 0,
+                            vy: (b && b.vy) || 0
+                        });
+                    }
+                }
+            });
         }
 
         const visibleEnemies = [];
@@ -1578,7 +1709,7 @@
             } else if (!isMe) {
                 for (let id in interpolatedPlayers) {
                     const p = interpolatedPlayers[id];
-                    if (Math.abs(p.renderX - x) < 1 && Math.abs(p.renderY - y) < 1) {
+                    if (p && Math.abs(p.renderX - x) < 1 && Math.abs(p.renderY - y) < 1) {
                         window.playerHealths[healthId].target = p.health || 100;
                         break;
                     }
@@ -1653,8 +1784,12 @@
        
         // Interpolation Functions
         function updateEnemyInterpolation(newEnemies) {
+            if (!newEnemies) return;
+            
             for (let newEnemy of newEnemies) {
-                let existingEnemy = interpolatedEnemies.find(e => e.id === newEnemy.id);
+                if (!newEnemy) continue;
+                
+                let existingEnemy = interpolatedEnemies.find(e => e && e.id === newEnemy.id);
                 if (existingEnemy) {
                     existingEnemy.targetX = newEnemy.x;
                     existingEnemy.targetY = newEnemy.y;
@@ -1687,7 +1822,9 @@
             const enemiesToRemove = [];
             
             for (let enemy of interpolatedEnemies) {
-                const stillAlive = newEnemies.some(ne => ne.id === enemy.id);
+                if (!enemy) continue;
+                
+                const stillAlive = newEnemies.some(ne => ne && ne.id === enemy.id);
                 
                 if (!stillAlive && !enemy.deathAnimation) {
                     enemy.deathAnimation = {
@@ -1707,7 +1844,7 @@
                 }
             }
             
-            interpolatedEnemies = interpolatedEnemies.filter(e => !enemiesToRemove.includes(e.id));
+            interpolatedEnemies = interpolatedEnemies.filter(e => e && !enemiesToRemove.includes(e.id));
         }
 
         function interpolateEnemies() {
@@ -1715,6 +1852,8 @@
             const colorFactor = 0.05; 
             
             for (let enemy of interpolatedEnemies) {
+                if (!enemy) continue;
+                
                 if (enemy.targetX !== undefined) {
                     enemy.renderX += (enemy.targetX - enemy.renderX) * factor;
                     enemy.renderY += (enemy.targetY - enemy.renderY) * factor;
@@ -1745,9 +1884,13 @@
         }
 
         function updatePlayerInterpolation(newPlayers) {
+            if (!newPlayers) return;
+            
             for (let id in newPlayers) {
                 if (id === myId?.toString()) continue;
                 let newPlayer = newPlayers[id];
+                if (!newPlayer) continue;
+                
                 const isDead = newPlayer.dead === true;
                 
                 if (interpolatedPlayers[id]) {
@@ -1763,6 +1906,12 @@
                     interpolatedPlayers[id].ghost = newPlayer.ghost;
                     interpolatedPlayers[id].dead = newPlayer.dead;
                     interpolatedPlayers[id].name = newPlayer.name;
+
+                    interpolatedPlayers[id].immune = newPlayer.immune || false;
+                    interpolatedPlayers[id].stealth = newPlayer.stealth || false;
+                    interpolatedPlayers[id].has_moved = newPlayer.has_moved || false;
+                    interpolatedPlayers[id].has_shot = newPlayer.has_shot || false;
+                    interpolatedPlayers[id].immune_until = newPlayer.immune_until || 0;
                 } else {
                     interpolatedPlayers[id] = {
                         ...newPlayer,
@@ -1778,7 +1927,12 @@
                         name: newPlayer.name,
                         isDying: false,
                         deathX: null,
-                        deathY: null
+                        deathY: null,
+                        immune: newPlayer.immune || false,
+                        stealth: newPlayer.stealth || false,
+                        has_moved: newPlayer.has_moved || false,
+                        has_shot: newPlayer.has_shot || false,
+                        immune_until: newPlayer.immune_until || 0
                     };
                 }
             }
@@ -1787,16 +1941,15 @@
                 if (!newPlayers[id] && !interpolatedPlayers[id].isDying && id !== myId?.toString()) {
                     delete interpolatedPlayers[id];
                 }
-                else if (newPlayers[id] && newPlayers[id].dead && interpolatedPlayers[id].isDying) {
-                    continue;
-                }
             }
         }
-
+            
         function interpolatePlayers() {
             const factor = 0.2;
             for (let id in interpolatedPlayers) {
                 let p = interpolatedPlayers[id];
+                if (!p) continue;
+                
                 p.renderX += (p.targetX - p.renderX) * factor;
                 p.renderY += (p.targetY - p.renderY) * factor;
                 p.renderAngle = p.targetAngle;
@@ -1804,138 +1957,310 @@
             }
         }
 
-        function updateEnemyBulletInterpolation(newEnemyBullets) {
-            const now = performance.now();
+        function updateEnemyBulletInterpolation(newBullets) {
+            if (!newBullets) return;
+            const now = Date.now();
+            const newMap = new Map();
+            const BULLET_LIFETIME = 5000;
             
-            if (Math.abs(interpolatedEnemyBullets.length - newEnemyBullets.length) > 10) {
-                console.log(`Bullet count changed: ${interpolatedEnemyBullets.length} -> ${newEnemyBullets.length}`);
-            }
-            
-            for (let newBullet of newEnemyBullets) {
-                let existingBullet = interpolatedEnemyBullets.find(b => b.id === newBullet.id);
-                
-                if (existingBullet) {
-                    existingBullet.targetX = newBullet.x;
-                    existingBullet.targetY = newBullet.y;
-                    existingBullet.color = newBullet.color;
-                    existingBullet.size = newBullet.size;
-                    existingBullet.damage = newBullet.damage;
-                    existingBullet.pattern = newBullet.pattern;
-                    existingBullet.infinite_range = newBullet.infinite_range || false;
-                    existingBullet.maxLifetime = newBullet.maxLifetime;
-                    existingBullet.shrinkStart = newBullet.shrinkStart;
-                    existingBullet.boss_phase = newBullet.boss_phase;
-      
-                    existingBullet.vx = newBullet.vx;
-                    existingBullet.vy = newBullet.vy;
-                    
-                    if (!existingBullet.createdAt) {
-                        existingBullet.createdAt = now;
-                    }
-                } else {
-                    interpolatedEnemyBullets.push({
-                        ...newBullet,
-                        renderX: newBullet.x,
-                        renderY: newBullet.y,
-                        targetX: newBullet.x,
-                        targetY: newBullet.y,
-                        createdAt: now,
-                        infinite_range: newBullet.infinite_range || false,
-                        maxLifetime: newBullet.maxLifetime,
-                        shrinkStart: newBullet.shrinkStart,
-                        vx: newBullet.vx,
-                        vy: newBullet.vy
-                    });
+            for (let [id, bullet] of interpolatedEnemyBullets) {
+                if (bullet) {
+                    bullet.seenInUpdate = false;
                 }
             }
             
-            const beforeCount = interpolatedEnemyBullets.length;
-            interpolatedEnemyBullets = interpolatedEnemyBullets.filter(b => 
-                newEnemyBullets.some(nb => nb.id === b.id)
-            );
+            newBullets.forEach(b => {
+                if (!b) return;
+                
+                let bullet = interpolatedEnemyBullets.get(b.id);
+                if (bullet) {
+                    bullet.targetX = b.x;
+                    bullet.targetY = b.y;
+                    bullet.targetVx = b.vx || 0;
+                    bullet.targetVy = b.vy || 0;
+                    bullet.hit = b.hit || false;
+                    bullet.hit_time = b.hit_time;
+                    bullet.lastUpdate = now;
+                    bullet.seenInUpdate = true;
+                    
+                    if (b.hit && !bullet.hit) {
+                        dyingEnemyBullets.push({
+                            id: b.id,
+                            x: bullet.renderX, 
+                            y: bullet.renderY,
+                            hitTime: now,
+                            size: bullet.size || 8,
+                            color: bullet.color || '#ff00ff',
+                            vx: bullet.vx,
+                            vy: bullet.vy
+                        });
+                        return;
+                    }
+                } else {
+                    bullet = {
+                        id: b.id,
+                        renderX: b.x,
+                        renderY: b.y,
+                        targetX: b.x,
+                        targetY: b.y,
+                        x: b.x,
+                        y: b.y,
+                        vx: b.vx || 0,
+                        vy: b.vy || 0,
+                        targetVx: b.vx || 0,
+                        targetVy: b.vy || 0,
+                        hit: b.hit || false,
+                        hit_time: b.hit_time,
+                        createdAt: now,
+                        lastUpdate: now,
+                        size: b.size || 8,
+                        color: b.color || '#ff00ff',
+                        pattern: b.pattern,
+                        seenInUpdate: true
+                    };
+
+                    if (b.hit) {
+                        dyingEnemyBullets.push({
+                            id: b.id,
+                            x: b.x,
+                            y: b.y,
+                            hitTime: now,
+                            size: b.size || 8,
+                            color: b.color || '#ff00ff',
+                            vx: b.vx,
+                            vy: b.vy
+                        });
+                        return; 
+                    }
+                }
+                newMap.set(b.id, bullet);
+            });
             
-            if (beforeCount !== interpolatedEnemyBullets.length) {
-                console.log(`Removed ${beforeCount - interpolatedEnemyBullets.length} bullets`);
+            for (let [id, bullet] of interpolatedEnemyBullets) {
+                if (bullet && !bullet.hit && !newMap.has(id) && !bullet.seenInUpdate) {
+                    dyingEnemyBullets.push({
+                        id: id,
+                        x: bullet.renderX,
+                        y: bullet.renderY,
+                        hitTime: now,
+                        size: bullet.size || 8,
+                        color: bullet.color || '#ff00ff',
+                        vx: bullet.vx,
+                        vy: bullet.vy
+                    });
+                    
+                    bulletPositionHistory.delete(id);
+                }
             }
+
+            const now2 = Date.now();
+            for (let [id, bullet] of newMap) {
+                if (now2 - (bullet.lastUpdate || 0) > BULLET_LIFETIME) {
+                    bulletPositionHistory.delete(id);
+                    newMap.delete(id);
+                }
+            }
+            
+            interpolatedEnemyBullets = newMap;
         }
 
         function interpolateEnemyBullets() {
-            for (let bullet of interpolatedEnemyBullets) {
-                if (bullet.targetX === undefined) continue;
-
-                const dx = bullet.targetX - bullet.renderX;
-                const dy = bullet.targetY - bullet.renderY;
-                const distToTarget = Math.hypot(dx, dy);
-                
-                if (distToTarget < 1) {
-                    bullet.renderX = bullet.targetX;
-                    bullet.renderY = bullet.targetY;
-                    continue;
-                }
-                
+            const now = Date.now();
+            const factor = 0.3;
+            const PREDICTION_FACTOR = 0.016;
             
-                let factor;
-                if (distToTarget > 100) {
-                    factor = 0.3;  
-                } else if (distToTarget > 50) {
-                    factor = 0.2;  
-                } else {
-                    factor = 0.1; 
+            for (let bullet of interpolatedEnemyBullets.values()) {
+                if (!bullet || bullet.hit) continue;
+                
+                if (bullet.targetX !== undefined) {
+                    bullet.renderX += (bullet.targetX - bullet.renderX) * factor;
+                    bullet.renderY += (bullet.targetY - bullet.renderY) * factor;
                 }
                 
-                bullet.renderX += dx * factor;
-                bullet.renderY += dy * factor;
+                if (bullet.targetVx !== undefined) {
+                    bullet.vx += (bullet.targetVx - bullet.vx) * factor;
+                    bullet.vy += (bullet.targetVy - bullet.vy) * factor;
+                }
                 
                 if (bullet.vx && bullet.vy) {
-                    bullet.renderX += bullet.vx * 0.008;  
-                    bullet.renderY += bullet.vy * 0.008;
+                    bullet.renderX += bullet.vx * PREDICTION_FACTOR;
+                    bullet.renderY += bullet.vy * PREDICTION_FACTOR;
                 }
-
-            }
-        }
-
-        function updateBulletInterpolation(newBullets) {
-            const now = performance.now();
-        
-            const hitBullets = newBullets.filter(b => b.hit === true);
-            
-            for (let newBullet of newBullets) {
-                let existingBullet = interpolatedBullets.find(b => b.id === newBullet.id);
                 
-                if (existingBullet) {
-                    existingBullet.targetX = newBullet.x;
-                    existingBullet.targetY = newBullet.y;
-                    existingBullet.hit = newBullet.hit;
-                    existingBullet.hit_time = newBullet.hit_time;
+                bullet.x = bullet.renderX;
+                bullet.y = bullet.renderY;
+
+                recordBulletPosition(bullet);
+            }
+        }
+
+                function updateBulletInterpolation(newBullets) {
+            if (!newBullets) return;
+            
+            const now = Date.now();
+            const newMap = new Map();
+            const BULLET_LIFETIME = 5000;
+            
+            newBullets.forEach(b => {
+                if (!b) return;
+                
+                let bullet = interpolatedBullets.get(b.id);
+                if (bullet) {
+                    bullet.targetX = b.x;
+                    bullet.targetY = b.y;
+                    bullet.targetVx = b.vx || 0;
+                    bullet.targetVy = b.vy || 0;
+                    bullet.hit = b.hit || false;
+                    bullet.hit_time = b.hit_time;
+                    bullet.lastUpdate = now;
+            
+                    if (b.hit && !bullet.hit) {
+                        const history = bulletPositionHistory.get(b.id) || [];
+                        const hitTime = b.hit_time * 1000;
+                        
+                        let closestPos = { x: bullet.renderX, y: bullet.renderY };
+                        let closestDiff = Infinity;
+                        
+                        for (const pos of history) {
+                            const diff = Math.abs(pos.time - hitTime);
+                            if (diff < closestDiff) {
+                                closestDiff = diff;
+                                closestPos = { x: pos.x, y: pos.y };
+                            }
+                        }
+                        
+                        if (history.length >= 2) {
+                            for (let i = 0; i < history.length - 1; i++) {
+                                const p1 = history[i];
+                                const p2 = history[i + 1];
+                                if (hitTime >= p1.time && hitTime <= p2.time) {
+                                    const t = (hitTime - p1.time) / (p2.time - p1.time);
+                                    closestPos = {
+                                        x: p1.x + (p2.x - p1.x) * t,
+                                        y: p1.y + (p2.y - p1.y) * t
+                                    };
+                                    break;
+                                }
+                            }
+                        }
+                        
+                        dyingBullets.push({
+                            id: b.id,
+                            x: closestPos.x,
+                            y: closestPos.y,
+                            hitTime: now,
+                            size: b.size || 5,
+                            color: b.color || '#ffff00',
+                            vx: b.vx,
+                            vy: b.vy
+                        });
+                        
+                        bulletPositionHistory.delete(b.id);
+                        return;
+                    }
                 } else {
-                    interpolatedBullets.push({
-                        id: newBullet.id,
-                        renderX: newBullet.x,
-                        renderY: newBullet.y,
-                        targetX: newBullet.x,
-                        targetY: newBullet.y,
-                        owner: newBullet.owner, 
-                        vx: newBullet.vx,         
-                        vy: newBullet.vy,
-                        hit: newBullet.hit,       
-                        hit_time: newBullet.hit_time
-                    });
+                    bullet = {
+                        id: b.id,
+                        renderX: b.x,
+                        renderY: b.y,
+                        targetX: b.x,
+                        targetY: b.y,
+                        x: b.x,
+                        y: b.y,
+                        vx: b.vx || 0,
+                        vy: b.vy || 0,
+                        targetVx: b.vx || 0,
+                        targetVy: b.vy || 0,
+                        owner: b.owner,
+                        hit: b.hit || false,
+                        hit_time: b.hit_time,
+                        createdAt: now,
+                        lastUpdate: now,
+                        size: b.size || 5,
+                        color: b.color || '#ffff00'
+                    };
+
+                    if (b.hit) {
+                        dyingBullets.push({
+                            id: b.id,
+                            x: b.x,
+                            y: b.y,
+                            hitTime: now,
+                            size: b.size || 5,
+                            color: b.color || '#ffff00',
+                            vx: b.vx,
+                            vy: b.vy
+                        });
+                        return;
+                    }
+                }
+                newMap.set(b.id, bullet);
+            });
+            
+            const now2 = Date.now();
+            for (let [id, bullet] of interpolatedBullets) {
+                if (bullet && !newMap.has(id) && !bullet.hit) {
+                    if (now2 - (bullet.lastUpdate || 0) > BULLET_LIFETIME) {
+                        bulletPositionHistory.delete(id);
+                        continue;
+                    }
+                    bullet.stale = true;
+                    newMap.set(id, bullet);
                 }
             }
-
-            interpolatedBullets = interpolatedBullets.filter(b => 
-                newBullets.some(nb => nb.id === b.id)
-            );
+            
+            interpolatedBullets = newMap;
         }
+
 
         function interpolateBullets() {
-            for (let bullet of interpolatedBullets) {
-                if (bullet.targetX === undefined) continue;
+            const now = Date.now();
+            const factor = 0.1; 
+            const PREDICTION_FACTOR = 0.016;
+            
+            for (let bullet of interpolatedBullets.values()) {
+                if (!bullet || bullet.hit) continue;
                 
-                const factor = 0.1; 
+                if (bullet.targetX !== undefined) {
+                    bullet.renderX += (bullet.targetX - bullet.renderX) * factor;
+                    bullet.renderY += (bullet.targetY - bullet.renderY) * factor;
+                }
                 
-                bullet.renderX += (bullet.targetX - bullet.renderX) * factor;
-                bullet.renderY += (bullet.targetY - bullet.renderY) * factor;
+                if (bullet.targetVx !== undefined) {
+                    bullet.vx += (bullet.targetVx - bullet.vx) * factor;
+                    bullet.vy += (bullet.targetVy - bullet.vy) * factor;
+                }
+                
+                if (bullet.vx && bullet.vy) {
+                    bullet.renderX += bullet.vx * PREDICTION_FACTOR;
+                    bullet.renderY += bullet.vy * PREDICTION_FACTOR;
+                }
+                
+                bullet.x = bullet.renderX;
+                bullet.y = bullet.renderY;
+
+                recordBulletPosition(bullet);
+            }
+            
+        }
+
+        function recordBulletPosition(bullet) {
+            if (!bullet || bullet.hit) return;
+            
+            const now = Date.now();
+            if (!bulletPositionHistory.has(bullet.id)) {
+                bulletPositionHistory.set(bullet.id, []);
+            }
+            
+            const history = bulletPositionHistory.get(bullet.id);
+            history.push({
+                time: now,
+                x: bullet.renderX,
+                y: bullet.renderY
+            });
+            
+            while (history.length > 0 && now - history[0].time > POSITION_HISTORY_DURATION) {
+                history.shift();
             }
         }
 
@@ -2064,20 +2389,45 @@
                         const distance = Math.hypot(dx, dy);
                         
                         if (distance >= 10) {
+                            // Generate a more unique ID
+                            const bulletId = `bullet_${myId}_${now}_${localBulletId++}`;
+                            
                             const bullet = {
-                                id: Math.random().toString(36).substr(2, 9),
+                                id: bulletId,
                                 x: myX,
                                 y: myY,
                                 vx: (dx / distance) * BULLET_SPEED,
                                 vy: (dy / distance) * BULLET_SPEED,
                                 owner: myId,
                                 damage: DAMAGE,
-                                createdAt: Date.now(),
+                                createdAt: now,
                                 size: BULLET_SIZE,
                                 color: '#ffff00'
                             };
 
-                            ws.send(JSON.stringify({type: 'shoot', bullet}));
+                            // Send to server
+                            ws.send(JSON.stringify({
+                                type: 'shoot', 
+                                bullet: bullet
+                            }));
+                            
+                            // Add bullet locally for instant feedback
+                            interpolatedBullets.set(bulletId, {
+                                id: bulletId,
+                                renderX: bullet.x,
+                                renderY: bullet.y,
+                                targetX: bullet.x,
+                                targetY: bullet.y,
+                                x: bullet.x,
+                                y: bullet.y,
+                                vx: bullet.vx,
+                                vy: bullet.vy,
+                                owner: bullet.owner,
+                                hit: false,
+                                createdAt: now,
+                                size: bullet.size,
+                                color: bullet.color
+                            });
                         }
                     }
                 }
@@ -2116,6 +2466,20 @@
         }, 100);
 
         function gameLoop() {
+            
+            // Calculate FPS
+            frameCount++;
+            const nowPerf = performance.now();
+            const deltaTime = (nowPerf - lastTime) / 1000;
+            lastTime = nowPerf;
+
+            if (nowPerf - lastFpsUpdate > 1000) {
+                fps = frameCount;
+                document.getElementById('fps').innerHTML = `FPS: ${fps}`;
+                frameCount = 0;
+                lastFpsUpdate = nowPerf;
+            }
+
             if (cameraX === 0 && cameraY === 0 && myId) {
                 cameraX = myX - canvas.width / 2;
                 cameraY = myY - canvas.height / 2;
@@ -2125,10 +2489,6 @@
 
             if (!window.eyeTargets) window.eyeTargets = {};
             
-            const nowPerf = performance.now();
-            const deltaTime = (nowPerf - lastTime) / 1000;
-            lastTime = nowPerf;
-
             ctx.fillStyle = '#1a1a2e';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -2172,7 +2532,7 @@
             cameraY += (targetCameraY - cameraY) * CAMERA_SMOOTH;
 
             // ============= MOVEMENT AND PREDICTION =============
-            if (myId && !mainMenuVisible) {
+            if (myId && !mainMenuVisible && initialPositionSet) {
                 // Collect current input state
                 const currentInput = {
                     up: keys['w'] || keys['ArrowUp'] || keys['W'],
@@ -2265,7 +2625,7 @@
             if (visibleTop < 0) ctx.fillRect(Math.max(0, visibleLeft), visibleTop, Math.min(WORLD_WIDTH, visibleRight) - Math.max(0, visibleLeft), -visibleTop);
             if (visibleBottom > WORLD_HEIGHT) ctx.fillRect(Math.max(0, visibleLeft), WORLD_HEIGHT, Math.min(WORLD_WIDTH, visibleRight) - Math.max(0, visibleLeft), visibleBottom - WORLD_HEIGHT);
 
-            // Draw grid
+            // Draw grid - Optimized for performance
             ctx.strokeStyle = GRID_COLOR;
             ctx.lineWidth = 1;
             const startX = Math.floor(Math.max(0, cameraX) / 50) * 50;
@@ -2273,22 +2633,25 @@
             const endX = Math.min(WORLD_WIDTH, cameraX + canvas.width);
             const endY = Math.min(WORLD_HEIGHT, cameraY + canvas.height);
 
+            // Batch grid drawing
+            ctx.beginPath();
             for (let x = startX; x <= endX; x += 50) {
-                ctx.beginPath();
                 ctx.moveTo(x, Math.max(0, cameraY));
                 ctx.lineTo(x, Math.min(WORLD_HEIGHT, cameraY + canvas.height));
-                ctx.stroke();
             }
+            ctx.stroke();
 
+            ctx.beginPath();
             for (let y = startY; y <= endY; y += 50) {
-                ctx.beginPath();
                 ctx.moveTo(Math.max(0, cameraX), y);
                 ctx.lineTo(Math.min(WORLD_WIDTH, cameraX + canvas.width), y);
-                ctx.stroke();
             }
+            ctx.stroke();
             
             // Draw enemies
             for (let enemy of interpolatedEnemies) {
+                if (!enemy) continue;
+                
                 let drawX = enemy.renderX;
                 let drawY = enemy.renderY;
                 let drawSize = enemy.size || ENEMY_SIZE;
@@ -2335,6 +2698,8 @@
             let localDist = Infinity;
 
             for (let enemy of interpolatedEnemies) {
+                if (!enemy) continue;
+                
                 const d = Math.hypot(enemy.renderX - myX, enemy.renderY - myY);
                 if (d < 300 && d < localDist) {
                     localDist = d;
@@ -2345,6 +2710,8 @@
             if (!localTarget) {
                 for (let id in interpolatedPlayers) {
                     const p = interpolatedPlayers[id];
+                    if (!p) continue;
+                    
                     const d = Math.hypot(p.renderX - myX, p.renderY - myY);
                     if (d < 300 && d < localDist) {
                         localDist = d;
@@ -2370,6 +2737,8 @@
             // Draw other players
             for (let id in interpolatedPlayers) {
                 const p = interpolatedPlayers[id];
+                if (!p) continue;
+                
                 const eyeId = `player_${id}`;
                 const isOtherGhost = p.ghost === true;
                 let deathAnim = playerDeathAnimations[id];
@@ -2382,6 +2751,8 @@
                 let closestTarget = null;
 
                 for (let enemy of interpolatedEnemies) {
+                    if (!enemy) continue;
+                    
                     const dist = Math.hypot(enemy.renderX - p.renderX, enemy.renderY - p.renderY);
                     if (dist < 300 && dist < closestDist) {
                         closestDist = dist;
@@ -2401,6 +2772,8 @@
                     for (let otherId in interpolatedPlayers) {
                         if (otherId === id) continue;
                         const other = interpolatedPlayers[otherId];
+                        if (!other) continue;
+                        
                         const dist = Math.hypot(other.renderX - p.renderX, other.renderY - p.renderY);
                         if (dist < 300 && dist < closestDist) {
                             closestDist = dist;
@@ -2424,6 +2797,19 @@
                 let drawY = p.renderY;
                 let drawSize = 20;
                 let playerColor = isOtherGhost ? '#88ccff' : '#ff4444';
+
+                if (p.immune || p.stealth) {
+                    console.log(`🎯 Player ${id} - immune: ${p.immune}, stealth: ${p.stealth}, has_moved: ${p.has_moved}, has_shot: ${p.has_shot}`);
+                    ctx.save();
+                    ctx.translate(drawX, drawY);
+                    ctx.globalAlpha = 0.2 + Math.sin(Date.now() * 0.005) * 0.1;
+                    ctx.strokeStyle = '#44AAFF';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 25, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.restore();
+                }
 
                 if (deathAnim) {
                     const now = performance.now();
@@ -2511,18 +2897,7 @@
                     const nameWidth = ctx.measureText(playerName).width;
                     ctx.fillText(playerName, myX - nameWidth/2, myY - 40);
                 } else {
-                    if (players[myId].immune) {
-                        ctx.save();
-                        ctx.translate(myX, myY);
-                        ctx.globalAlpha = 0.3 + Math.sin(Date.now() * 0.01) * 0.2;
-                        ctx.strokeStyle = '#4CAF50';
-                        ctx.lineWidth = 3;
-                        ctx.beginPath();
-                        ctx.arc(0, 0, 25, 0, Math.PI * 2);
-                        ctx.stroke();
-                        ctx.restore();
-                    } 
-                    else if (players[myId].stealth) {
+                    if (players[myId].immune || players[myId].stealth) {
                         ctx.save();
                         ctx.translate(myX, myY);
                         ctx.globalAlpha = 0.2 + Math.sin(Date.now() * 0.005) * 0.1;
@@ -2531,7 +2906,6 @@
                         ctx.beginPath();
                         ctx.arc(0, 0, 25, 0, Math.PI * 2);
                         ctx.stroke();
-
                         ctx.restore();
                     }
                     
@@ -2550,119 +2924,95 @@
                 }
             }
 
-            // Draw server position debug marker
-            if (debugVisible && lastServerPosition.x !== 0) {
-                ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+            for (let bullet of interpolatedBullets.values()) {
+                if (!bullet || bullet.hit) continue;
+                
+                ctx.save();
+                ctx.translate(bullet.renderX, bullet.renderY);
+                
+                if (bullet.vx || bullet.vy) {
+                    ctx.rotate(Math.atan2(bullet.vy, bullet.vx));
+                }
+                
+                // Draw bullet with trail
+                ctx.fillStyle = bullet.color || '#ffff00';
+                
+                // Main bullet
                 ctx.beginPath();
-                ctx.arc(lastServerPosition.x, lastServerPosition.y, 10, 0, Math.PI * 2);
+                ctx.ellipse(0, 0, (bullet.size || 5) * 1.5, (bullet.size || 5) * 0.8, 0, 0, Math.PI * 2);
                 ctx.fill();
                 
-                ctx.strokeStyle = 'yellow';
-                ctx.lineWidth = 2;
+                // Small trail
+                ctx.globalAlpha = 0.3;
                 ctx.beginPath();
-                ctx.moveTo(myX, myY);
-                ctx.lineTo(lastServerPosition.x, lastServerPosition.y);
-                ctx.stroke();
-            }
-
-            for (let b of interpolatedBullets) {
-                if (b && b.renderX !== undefined && b.renderY !== undefined) {
-                    const now = Date.now();
-                    
-                    let currentSize = BULLET_SIZE;
-                    let currentAlpha = 1.0;
-                    let bulletColor = b.color || '#ffff00';
-
-                    if (b.hit === true) {
-                        const hitTime = b.hit_time * 1000;
-                        const timeSinceHit = now - hitTime;
-                        const shrinkDuration = 200;
-                        
-                        console.log('Hit bullet timing:', {
-                            now,
-                            hitTime,
-                            timeSinceHit,
-                            willDraw: timeSinceHit > 0 && timeSinceHit < shrinkDuration
-                        });
-                        
-                        if (timeSinceHit > 0 && timeSinceHit < shrinkDuration) {
-                            const shrinkFactor = 1.0 - (timeSinceHit / shrinkDuration);
-                            currentSize = BULLET_SIZE * shrinkFactor;
-                            currentAlpha = shrinkFactor;
-                            bulletColor = '#ffaa00'; 
-                        } else {
-                            continue;
-                        }
-                    }
-                    
-                    if (currentSize > 0.5) {
-                        ctx.save();
-                        ctx.translate(b.renderX, b.renderY);
-                        ctx.globalAlpha = currentAlpha;
-
-                        if (b.vx !== 0 || b.vy !== 0) {
-                            const angle = Math.atan2(b.vy, b.vx);
-                            ctx.rotate(angle);
-                        }
-
-                        ctx.fillStyle = bulletColor;
-                        ctx.beginPath();
-                        ctx.ellipse(0, 0, currentSize * 1.5, currentSize * 0.8, 0, 0, Math.PI * 2);
-                        ctx.fill();
-                        
-                        ctx.restore();
-                    }
-                }
+                ctx.ellipse(-(bullet.size || 5) * 2, 0, (bullet.size || 5) * 1.2, (bullet.size || 5) * 0.6, 0, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
             }
 
             // Draw enemy bullets
-            for (let b of interpolatedEnemyBullets) {
-                const now = performance.now();
+            for (let bullet of interpolatedEnemyBullets.values()) {
+                if (!bullet || bullet.hit) continue;
                 
-                let currentSize = b.size || 8;
-                let currentAlpha = 1.0;
-                
-                if (!b.infinite_range && b.maxLifetime) {
-                    const age = now - (b.createdAt || now);
-                    const shrinkStart = b.shrinkStart || 0.7; 
-                    
-                    if (age > b.maxLifetime * shrinkStart) {
-                        const shrinkDuration = b.maxLifetime * (1 - shrinkStart);
-                        const shrinkAge = age - (b.maxLifetime * shrinkStart);
-                        let shrinkFactor = 1.0 - (shrinkAge / shrinkDuration);
-                        shrinkFactor = Math.max(0, Math.min(1, shrinkFactor));
-                        
-                        currentSize = (b.size || 8) * shrinkFactor;
-                        currentAlpha = shrinkFactor;
-                    }
-                    
-                    if (age > b.maxLifetime * 0.9 && currentSize > 1) {
-                        const pulse = Math.sin(age * 0.05) * 0.2 + 0.8;
-                        currentSize *= pulse;
-                    }
+                if (bullet.stale && Date.now() - bullet.lastUpdate > 100) {
+                    continue;
                 }
                 
-                if (currentSize > 0.5) {
-                    ctx.globalAlpha = currentAlpha;
-                    ctx.fillStyle = b.color || '#ff00ff';
-                    ctx.beginPath();
-                    ctx.arc(b.renderX, b.renderY, currentSize, 0, Math.PI * 2);
-                    ctx.fill();
-                    
-                    ctx.globalAlpha = 1;
-                }
+                ctx.fillStyle = bullet.color || '#ff00ff';
+                ctx.beginPath();
+                ctx.arc(bullet.renderX, bullet.renderY, bullet.size || 8, 0, Math.PI * 2);
+                ctx.fill();
             }
+            
+            // Player bullet hit effects
+            dyingBullets = dyingBullets.filter(b => {
+                if (!b) return false;
+                
+                const timeSinceHit = now - b.hitTime;
+                if (timeSinceHit >= 200) return false;
+                
+                const progress = timeSinceHit / 200;
+                const size = b.size * (1 - progress);
+                const alpha = 1 - progress;
+                
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = b.color || '#ffff00';
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+                
+                return true;
+            });
+
+            // Enemy bullet hit effects
+            dyingEnemyBullets = dyingEnemyBullets.filter(b => {
+                if (!b) return false;
+                
+                const timeSinceHit = now - b.hitTime;
+                if (timeSinceHit >= 200) return false;
+                
+                const progress = timeSinceHit / 200;
+                
+                const size = b.size * (1 - progress * 0.7);
+                const alpha = 1 - progress;
+                
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = b.color || '#ff00ff';
+                
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+                
+                return true;
+            });
 
             ctx.restore();
-
-            // FPS counter
-            frameCount++;
-            if (nowPerf - lastFpsUpdate >= 1000) {
-                domElements.fps.innerHTML = `FPS: ${frameCount} | PING: ${ping}ms`;
-                frameCount = 0;
-                lastFpsUpdate = nowPerf;
-            }
-
             requestAnimationFrame(gameLoop);
         }
 
